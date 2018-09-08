@@ -10,7 +10,7 @@ output_dir = '/Users/adelard/Documents/annual_project/output/'
 characters = open(base_dir + 'test.txt', 'r').read().replace('\n', '')
 
 
-for font_name in list(os.walk(fonts_dir))[0][2][1:]:
+for font_name in list(os.listdir(fonts_dir))[1:]:
     font = ImageFont.truetype(fonts_dir + font_name, 96)
 
     for output_text in characters:
