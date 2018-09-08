@@ -20,7 +20,7 @@ for font_name in list(os.listdir(fonts_dir))[1:]:
     # Traverse all characters
     for output_text in characters:
 
-        # Create a 128x128 img
+        # Create a L with alpha img
         img = Image.new(mode='LA', size=(128, 128))
 
         draw = ImageDraw.Draw(img)
