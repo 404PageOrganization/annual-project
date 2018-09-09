@@ -4,14 +4,11 @@ import os
 import platform
 
 # Define the abspath
-output_dir = 'output/'
+output_dir = 'output'
 
 # Read 3500 most used chinese characters
-characters = open('test.txt', 'r').read().replace('\n', '')
+characters = open('test.txt', 'r', encoding='utf-8').read().replace('\n', '')
 
 # Make all directorys
 for output_text in characters:
-    if 'Windows' in platform.platform():
-        os.system('md' + output_dir + output_text)
-    else:
-        os.system('mkdir ' + output_dir + output_text)
+    os.mkdir(output_dir + os.sep + output_text)
