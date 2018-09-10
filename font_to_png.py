@@ -25,7 +25,7 @@ for font_name in list(os.listdir(fonts_dir))[1:]:
 
         draw = ImageDraw.Draw(img)
 
-        # Make the font drew on center
+        # Make the font drawn on center
         text_size=draw.textsize(output_text, font)
         text_w=text_size[0]
         text_h=text_size[1]
