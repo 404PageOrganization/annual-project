@@ -1,5 +1,5 @@
 /fonts
 /fonts_reserve
 /output
-/.ipynb_checkpoints
+/doc/.ipynb_checkpoints
 *.pdf
