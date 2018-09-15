@@ -1,6 +1,6 @@
 # coding utf-8
 
-from os import listdir
+import os
 
 # Define the abspath
 output_dir = 'output'
