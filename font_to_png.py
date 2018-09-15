@@ -32,5 +32,6 @@ for font_name in [name for name in os.listdir(fonts_dir) if name != '.DS_Store']
         draw.text((64 - text_w / 2, 64 - text_h / 2),
                   output_text, font=font, fill=(0, 255))
 
+        # Save the image
         img.save(output_dir + os.sep + output_text + os.sep +
                  font_name.replace('.ttf', '.png').replace('.ttc', '.png'), "PNG")
