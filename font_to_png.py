@@ -1,7 +1,7 @@
 # coding utf-8
 
 from PIL import Image, ImageDraw, ImageFont
-from os import listdir
+import os
 
 # Define the abspath
 fonts_dir = 'fonts'
@@ -12,7 +12,7 @@ characters = open('test.txt', 'r', encoding='utf-8').read().replace('\n', '')
 
 # Use all fonts in fonts' directory
 # One item in list is a file named ".DS_Store", not a font file, so ignore it
-for font_name in [name for name in listdir(fonts_dir) if name != '.DS_Store']:
+for font_name in [name for name in os.listdir(fonts_dir) if name != '.DS_Store']:
 
     # Read font by using truetype
     font = ImageFont.truetype(fonts_dir + os.sep + font_name, 96)
