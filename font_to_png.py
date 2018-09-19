@@ -5,7 +5,7 @@ import os
 
 # Define the abspath
 fonts_dir = 'fonts'
-output_dir = 'output'
+raw_img_dir = 'raw_img'
 
 # Read 3500 most used chinese characters
 characters = open('test.txt', 'r', encoding='utf-8').read().replace('\n', '')
@@ -33,5 +33,5 @@ for font_name in [name for name in os.listdir(fonts_dir) if name != '.DS_Store']
                   output_text, font=font, fill=(0, 255))
 
         # Save the image
-        img.save(output_dir + os.sep + output_text + os.sep +
+        img.save(raw_img_dir + os.sep + output_text + os.sep +
                  font_name.replace('.ttf', '.png').replace('.ttc', '.png'), "PNG")
