@@ -6,6 +6,10 @@ import os
 import numpy
 
 raw_img_dir = 'raw_img'
+real_img_dir = 'real_img'
+fake_img_dir = 'fake_img'
+
+epochs = 10
 
 raw_images = []
 real_images = []
@@ -16,19 +20,24 @@ label = []
 # Read raw images
 for i, raw_img_file in enumerate([name for name in os.listdir(raw_img_dir) if name != '.DS_Store']):
     for file_name in [name for name in os.listdir(raw_img_dir + os.sep + raw_img_file) if name != '.DS_Store']:
-        real_images.append(list(Image.open(raw_img_dir + os.sep +
-                                           raw_img_file + os.sep + file_name).getdata()))
+        raw_images.append(list(Image.open(raw_img_dir + os.sep +
+                                          raw_img_file + os.sep + file_name).getdata()))
 
+# Read real images
+for i, real_img_file in enumerate([name for name in os.listdir(real_img_dir) if name != '.DS_Store']):
+    for file_name in [name for name in os.listdir(real_img_dir + os.sep + real_img_file) if name != '.DS_Store']:
+        real_images.append(list(Image.open(real_img_dir + os.sep +
+                                           real_img_file + os.sep + file_name).getdata()))
+        label.append(1)
 
-'''
-x = numpy.array(images)
-y = numpy.array(label)
+real_images = numpy.array(real_images)
+label = numpy.array(label)
 
-x = x.reshape(x.shape[0], 128, 128, 2).astype('float32') / 255
-y = np_utils.to_categorical(y)
-'''
+real_images = real_images.reshape(
+    real_images.shape[0], 128, 128, 2).astype('float32') / 255
+label = np_utils.to_categorical(label)
 
-Generative = Sequential([
+generator = Sequential([
     Conv2D(input_shape=(128, 128, 2),
            filters=12,
            kernel_size=3,
@@ -81,7 +90,7 @@ Generative = Sequential([
            activation='softmax'),
 ])
 
-Discriminative = Sequential([
+discriminator = Sequential([
     Conv2D(input_shape=(128, 128, 2),
            filters=12,
            kernel_size=3,
@@ -114,5 +123,15 @@ Discriminative = Sequential([
           activation='softmax')
 ])
 
-print(Generative.summary())
-print(Discriminative.summary())
+# Connect generator with discriminator
+discriminator.trainable = False
+combine = Sequential([generator, discriminator])
+
+# Print model struct
+print(generator.summary())
+print(discriminator.summary())
+print(combine.summary())
+
+generator.compi
+for epoch in range epochs:
+    fake_images =
