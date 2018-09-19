@@ -1,6 +1,8 @@
 /fonts
 /fonts_reserve
-/output
+/raw_img
+/real_img
+/fake_img
 /notebook/.ipynb_checkpoints
 /.ipynb_checkpoints
 *.pdf
