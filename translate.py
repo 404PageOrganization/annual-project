@@ -32,14 +32,14 @@ for real_img_file in [name for name in os.listdir(real_img_dir) if name != '.DS_
 
 raw_images = numpy.array(raw_images)
 raw_images = raw_images.reshape(
-    raw_images.shape[0], 128, 128, 1).astype('float32') / 255
+    raw_images.shape[0], 128, 128, 2).astype('float32') / 255
 real_images = numpy.array(real_images)
 real_images = real_images.reshape(
-    real_images.shape[0], 128, 128, 1).astype('float32') / 255
+    real_images.shape[0], 128, 128, 2).astype('float32') / 255
 
 generator = Sequential([
-    Conv2D(input_shape=(128, 128, 1),
-           filters=6,
+    Conv2D(input_shape=(128, 128, 2),
+           filters=12,
            kernel_size=3,
            padding='same'),
     LeakyReLU(alpha=0.3),
@@ -83,19 +83,19 @@ generator = Sequential([
            padding='same'),
     UpSampling2D(2),
     LeakyReLU(alpha=0.3),
-    Conv2D(filters=6,
+    Conv2D(filters=12,
            kernel_size=3,
            padding='same'),
     LeakyReLU(alpha=0.3),
-    Conv2D(filters=1,
+    Conv2D(filters=2,
            kernel_size=3,
            padding='same',
            activation='softmax'),
 ])
 
 discriminator = Sequential([
-    Conv2D(input_shape=(128, 128, 1),
-           filters=6,
+    Conv2D(input_shape=(128, 128, 2),
+           filters=12,
            kernel_size=3,
            padding='same'),
     LeakyReLU(alpha=0.3),
@@ -145,6 +145,11 @@ for epoch in range(1, epochs + 1):
     print('Epoch:{}'.format(epoch))
 
     fake_images = generator.predict(raw_images)
+
+    save_image = (fake_images[0] * 255).astype('uint8')
+
+    Image.fromarray(save_image, mode='LA').save(
+        fake_img_dir + os.sep + str(epoch) + '.png')
 
     for real, fake in zip(real_images, fake_images):
 
