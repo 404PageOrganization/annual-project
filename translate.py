@@ -1,7 +1,8 @@
 from keras.utils import np_utils
-from keras.models import Sequential
+from keras.models import Sequential, load_model
 from keras.layers import Dense, Dropout, Conv2D, MaxPooling2D, Flatten, Reshape, UpSampling2D, LeakyReLU, ELU
 from PIL import Image, ImageDraw, ImageFont
+import pickle
 import os
 import numpy
 
@@ -12,19 +13,28 @@ fonts_dir = 'fonts'
 real_img_dir = 'real_img'
 fake_img_dir = 'fake_img'
 model_data_dir = 'model_data'
+data_file_name = 'model.pickle'
 
-start_epoch = 1
+# Define args
 run_epochs = 5
-epochs_for_discriminator = 1
-epochs_for_generator = 10
-save_rate = 1
-save_models = False
+epochs_for_discriminator = 3
+epochs_for_generator = 6
+save_image_rate = 1
+save_model_rate = 5
 
+trained = os.path.exists(model_data_dir + os.sep + data_file_name)
+
+if trained:
+    model_data = open(model_data_dir + os.sep + data_file_name, 'rb')
+    start_epoch = pickle.load(model_data)
+    model_data.close()
+else:
+    start_epoch = 1
+
+# Read real images & characters
 real_images = []
 characters = []
-raw_images = []
 
-# Read real images
 for real_img_file in [name for name in os.listdir(real_img_dir) if name != '.DS_Store']:
     for file_name in [name for name in os.listdir(real_img_dir + os.sep + real_img_file) if name != '.DS_Store']:
         real_images.append(list(Image.open(real_img_dir + os.sep +
@@ -32,6 +42,8 @@ for real_img_file in [name for name in os.listdir(real_img_dir) if name != '.DS_
         characters.append(real_img_file)
 
 # Generate raw images
+raw_images = []
+
 # Read 1 font
 font_name = [name for name in os.listdir(fonts_dir) if name != '.DS_Store'][0]
 
@@ -152,6 +164,10 @@ discriminator = Sequential([
           activation='softmax')
 ])
 
+if trained:
+    generator = load_model(model_data_dir + os.sep + 'generator.h5')
+    discriminator = load_model(model_data_dir + os.sep + 'discriminator.h5')
+
 # Connect generator with discriminator
 discriminator.trainable = False
 combine = Sequential([generator, discriminator])
@@ -162,9 +178,15 @@ print(discriminator.summary())
 print(combine.summary())
 
 # Compile models
-generator.compile(loss='categorical_crossentropy', optimizer='adam')
-discriminator.compile(loss='categorical_crossentropy', optimizer='adam')
-combine.compile(loss='categorical_crossentropy', optimizer='adam')
+generator.compile(loss='categorical_crossentropy',
+                  optimizer='adam',
+                  metrics=['accuracy'])
+discriminator.compile(loss='categorical_crossentropy',
+                      optimizer='sgd',
+                      metrics=['accuracy'])
+combine.compile(loss='categorical_crossentropy',
+                optimizer='adam',
+                metrics=['accuracy'])
 
 # Train models
 for epoch in range(start_epoch, start_epoch + run_epochs):
@@ -178,27 +200,38 @@ for epoch in range(start_epoch, start_epoch + run_epochs):
     print('Training discriminator.')
 
     discriminator.trainable = True
-    discriminator.compile(loss='categorical_crossentropy', optimizer='adam')
+    discriminator.compile(loss='categorical_crossentropy',
+                          optimizer='sgd',
+                          metrics=['accuracy'])
+
+    images = []
 
     for real, fake in zip(real_images, fake_images):
+        images.append(real)
+        images.append(fake)
 
-        images = numpy.array((real, fake))
-        y = [1, 0]
-        y = numpy.array(y)
-        y = np_utils.to_categorical(y)
+    images = numpy.array(images)
 
-        discriminator.fit(x=images,
-                          y=y,
-                          epochs=epochs_for_discriminator,
-                          verbose=0)
+    length = len(characters)
+
+    y = [1, 0] * length
+    y = numpy.array(y)
+    y = np_utils.to_categorical(y)
+
+    discriminator.fit(x=images,
+                      y=y,
+                      batch_size=2,
+                      epochs=epochs_for_discriminator,
+                      verbose=0)
 
     # Training generator
     print('Training generator.')
 
     discriminator.trainable = False
-    discriminator.compile(loss='categorical_crossentropy', optimizer='adam')
+    discriminator.compile(loss='categorical_crossentropy',
+                          optimizer='sgd',
+                          metrics=['accuracy'])
 
-    length = len(characters)
     y = [[0, 1]] * length
     y = numpy.array(y).astype('float32')
 
@@ -208,12 +241,17 @@ for epoch in range(start_epoch, start_epoch + run_epochs):
                 verbose=2)
 
     # Save image and models
-    if(epoch % save_rate == 0):
-
+    if(epoch % save_image_rate == 0):
         save_image = (fake_images[0] * 255).astype('uint8')
         Image.fromarray(save_image, mode='LA').save(
             fake_img_dir + os.sep + str(epoch) + '.png')
 
-        if save_models:
-            generator.save(model_data_dir + os.sep + 'generator.h5')
-            discriminator.save(model_data_dir + os.sep + 'discriminator.h5')
+    if(epoch % save_model_rate == 0):
+        # Write now epoch
+        model_data = open(model_data_dir + os.sep + data_file_name, 'wb')
+        pickle.dump(epoch + 1, model_data)
+        model_data.close()
+
+        # Save model
+        generator.save(model_data_dir + os.sep + 'generator.h5')
+        discriminator.save(model_data_dir + os.sep + 'discriminator.h5')
