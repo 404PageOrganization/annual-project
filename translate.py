@@ -10,8 +10,10 @@ raw_img_dir = 'raw_img'
 real_img_dir = 'real_img'
 fake_img_dir = 'fake_img'
 
-epochs = 1
-epochs_combine = 1
+start_epoch = 1
+run_epochs = 1
+epochs_for_combine = 1
+save_rate = 1
 
 raw_images = []
 real_images = []
@@ -30,6 +32,7 @@ for real_img_file in [name for name in os.listdir(real_img_dir) if name != '.DS_
         real_images.append(list(Image.open(real_img_dir + os.sep +
                                            real_img_file + os.sep + file_name).getdata()))
 
+# Process image
 raw_images = numpy.array(raw_images)
 raw_images = raw_images.reshape(
     raw_images.shape[0], 128, 128, 2).astype('float32') / 255
@@ -131,9 +134,9 @@ discriminator.trainable = False
 combine = Sequential([generator, discriminator])
 
 # Print model struct
-print(generator.summary())
-print(discriminator.summary())
-print(combine.summary())
+print(generator.summary() + '\n\n')
+print(discriminator.summary() + '\n\n')
+print(combine.summary() + '\n\n')
 
 # Compile models
 generator.compile(loss='categorical_crossentropy', optimizer='adam')
@@ -141,15 +144,10 @@ discriminator.compile(loss='categorical_crossentropy', optimizer='adam')
 combine.compile(loss='categorical_crossentropy', optimizer='adam')
 
 # Train models
-for epoch in range(1, epochs + 1):
+for epoch in range(start_epoch, start_epoch + run_epochs):
     print('Epoch:{}'.format(epoch))
 
     fake_images = generator.predict(raw_images)
-
-    save_image = (fake_images[0] * 255).astype('uint8')
-
-    Image.fromarray(save_image, mode='LA').save(
-        fake_img_dir + os.sep + str(epoch) + '.png')
 
     for real, fake in zip(real_images, fake_images):
 
@@ -169,3 +167,14 @@ for epoch in range(1, epochs + 1):
 
     for i in range(epochs_combine):
         combine.fit(raw_images, y, verbose=0)
+
+    if(epoch % save_rate == 0):
+
+        # Save image
+        save_image = (fake_images[0] * 255).astype('uint8')
+        Image.fromarray(save_image, mode='LA').save(
+            fake_img_dir + os.sep + str(epoch) + '.png')
+
+        # Save models
+        generator.save('generator.h5')
+        discriminator.save('discriminator.h5')
