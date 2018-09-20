@@ -134,9 +134,9 @@ discriminator.trainable = False
 combine = Sequential([generator, discriminator])
 
 # Print model struct
-print(generator.summary() + '\n\n')
-print(discriminator.summary() + '\n\n')
-print(combine.summary() + '\n\n')
+print(generator.summary())
+print(discriminator.summary())
+print(combine.summary())
 
 # Compile models
 generator.compile(loss='categorical_crossentropy', optimizer='adam')
