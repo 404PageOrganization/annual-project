@@ -3,7 +3,6 @@
 
 使用 CGANs 来完成生成字体与风格统一
 
-## English
-### Using pure text to generate handwritten form
+#### 安装环境
 
-Using CGANs to generate the font and stylize it
+conda install keras pillow pandas
