@@ -1,11 +1,13 @@
 from keras.utils import np_utils
+from keras.regularizers import l2
 from keras.models import Sequential, load_model
-from keras.layers import Dense, Dropout, Conv2D, MaxPooling2D, Flatten, Reshape, UpSampling2D, LeakyReLU, ELU
+from keras.layers import Dense, BatchNormalization, Conv2D, MaxPooling2D, Flatten, Reshape, UpSampling2D, LeakyReLU, ELU
 from PIL import Image, ImageDraw, ImageFont
 import pickle
 import os
 import numpy
 
+# See https://stackoverflow.com/questions/42270739/how-do-i-resolve-these-tensorflow-warnings
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 # Define abspaths
@@ -15,21 +17,30 @@ fake_img_dir = 'fake_img'
 model_data_dir = 'model_data'
 data_file_name = 'model.pickle'
 
-# Define args
-run_epochs = 5
-epochs_for_discriminator = 3
-epochs_for_generator = 6
+# Define running args
+run_epochs = 10
+epochs_for_discriminator = 2
+epochs_for_generator = 5
 save_image_rate = 1
 save_model_rate = 5
+
+# Define model args
+l2_rate = 0.01
+leaky_relu_alpha = 0.3
+elu_alpha = 1.0
 
 trained = os.path.exists(model_data_dir + os.sep + data_file_name)
 
 if trained:
     model_data = open(model_data_dir + os.sep + data_file_name, 'rb')
     start_epoch = pickle.load(model_data)
+    generatorr_initial_epoch = pickle.load(model_data)
+    discriminator_initial_epoch = pickle.load(model_data)
     model_data.close()
 else:
-    start_epoch = 1
+    start_epoch = 0
+    generatorr_initial_epoch = 0
+    discriminator_initial_epoch = 0
 
 # Read real images & characters
 real_images = []
@@ -78,90 +89,127 @@ generator = Sequential([
     Conv2D(input_shape=(128, 128, 2),
            filters=12,
            kernel_size=3,
+           strides=2,
+           kernel_initializer='uniform',
+           kernel_regularizer=l2(l2_rate),
            padding='same'),
-    LeakyReLU(alpha=0.3),
-    MaxPooling2D(pool_size=2),
+    LeakyReLU(alpha=leaky_relu_alpha),
+    BatchNormalization(),
     Conv2D(filters=24,
            kernel_size=3,
+           strides=2,
+           kernel_initializer='uniform',
+           kernel_regularizer=l2(l2_rate),
            padding='same'),
-    LeakyReLU(alpha=0.3),
-    MaxPooling2D(pool_size=2),
+    LeakyReLU(alpha=leaky_relu_alpha),
+    BatchNormalization(),
     Conv2D(filters=48,
            kernel_size=3,
+           strides=2,
+           kernel_initializer='uniform',
+           kernel_regularizer=l2(l2_rate),
            padding='same'),
-    LeakyReLU(alpha=0.3),
-    MaxPooling2D(pool_size=2),
+    LeakyReLU(alpha=leaky_relu_alpha),
+    BatchNormalization(),
     Flatten(),
     Dense(units=12288,
-          kernel_initializer='normal'),
-    ELU(alpha=1.0),
+          kernel_initializer='uniform',
+          kernel_regularizer=l2(l2_rate)),
+    ELU(alpha=elu_alpha),
+    BatchNormalization(),
     Dense(units=2048,
-          kernel_initializer='normal'),
-    ELU(alpha=1.0),
+          kernel_initializer='uniform',
+          kernel_regularizer=l2(l2_rate)),
+    ELU(alpha=elu_alpha),
+    BatchNormalization(),
     Dense(units=128,
-          kernel_initializer='normal'),
-    ELU(alpha=1.0),
+          kernel_initializer='uniform',
+          kernel_regularizer=l2(l2_rate)),
+    ELU(alpha=elu_alpha),
+    BatchNormalization(),
     Dense(units=128,
-          kernel_initializer='normal'),
-    ELU(alpha=1.0),
+          kernel_initializer='uniform',
+          kernel_regularizer=l2(l2_rate)),
+    ELU(alpha=elu_alpha),
+    BatchNormalization(),
     Dense(units=2048,
-          kernel_initializer='normal'),
-    ELU(alpha=1.0),
+          kernel_initializer='uniform',
+          kernel_regularizer=l2(l2_rate)),
+    ELU(alpha=elu_alpha),
+    BatchNormalization(),
     Dense(units=12288,
-          kernel_initializer='normal',
-          activation='relu'),
+          kernel_initializer='uniform',
+          kernel_regularizer=l2(l2_rate)),
     Reshape((16, 16, 48),
             input_shape=(12288,)),
-    UpSampling2D(2),
-    LeakyReLU(alpha=0.3),
+    BatchNormalization(),
+    LeakyReLU(alpha=leaky_relu_alpha),
     Conv2D(input_shape=(32, 32, 48),
            filters=24,
            kernel_size=3,
+           dilation_rate=2,
+           kernel_initializer='uniform',
+           kernel_regularizer=l2(l2_rate),
            padding='same'),
-    UpSampling2D(2),
-    LeakyReLU(alpha=0.3),
+    BatchNormalization(),
+    LeakyReLU(alpha=leaky_relu_alpha),
     Conv2D(filters=12,
            kernel_size=3,
+           dilation_rate=2,
+           kernel_initializer='uniform',
+           kernel_regularizer=l2(l2_rate),
            padding='same'),
-    UpSampling2D(2),
-    LeakyReLU(alpha=0.3),
+    BatchNormalization(),
+    LeakyReLU(alpha=leaky_relu_alpha),
     Conv2D(filters=2,
            kernel_size=3,
+           dilation_rate=2,
+           kernel_initializer='uniform',
+           kernel_regularizer=l2(l2_rate),
            padding='same',
-           activation='softmax'),
+           activation='sigmoid'),
 ])
 
 discriminator = Sequential([
     Conv2D(input_shape=(128, 128, 2),
            filters=12,
            kernel_size=3,
+           strides=2,
+           kernel_initializer='uniform',
+           kernel_regularizer=l2(l2_rate),
            padding='same'),
-    LeakyReLU(alpha=0.3),
-    Dropout(0.25),
-    MaxPooling2D(pool_size=2),
+    LeakyReLU(alpha=leaky_relu_alpha),
+    BatchNormalization(),
     Conv2D(filters=24,
            kernel_size=3,
+           strides=2,
+           kernel_initializer='uniform',
+           kernel_regularizer=l2(l2_rate),
            padding='same'),
-    LeakyReLU(alpha=0.3),
-    Dropout(0.25),
-    MaxPooling2D(pool_size=2),
+    LeakyReLU(alpha=leaky_relu_alpha),
+    BatchNormalization(),
     Conv2D(filters=48,
            kernel_size=3,
+           strides=2,
+           kernel_initializer='uniform',
+           kernel_regularizer=l2(l2_rate),
            padding='same'),
-    LeakyReLU(alpha=0.3),
-    Dropout(0.25),
-    MaxPooling2D(pool_size=2),
+    LeakyReLU(alpha=leaky_relu_alpha),
+    BatchNormalization(),
     Flatten(),
     Dense(units=2048,
-          kernel_initializer='normal'),
-    ELU(alpha=1.0),
-    Dropout(0.5),
+          kernel_initializer='uniform',
+          kernel_regularizer=l2(l2_rate)),
+    LeakyReLU(alpha=leaky_relu_alpha),
+    BatchNormalization(),
     Dense(units=16,
-          kernel_initializer='normal'),
-    ELU(alpha=1.0),
+          kernel_initializer='uniform',
+          kernel_regularizer=l2(l2_rate)),
+    LeakyReLU(alpha=leaky_relu_alpha),
     Dense(units=2,
-          kernel_initializer='normal',
-          activation='softmax')
+          kernel_initializer='uniform',
+          kernel_regularizer=l2(l2_rate),
+          activation='sigmoid')
 ])
 
 if trained:
@@ -172,73 +220,79 @@ if trained:
 discriminator.trainable = False
 combine = Sequential([generator, discriminator])
 
+'''
 # Print model struct
 print(generator.summary())
 print(discriminator.summary())
 print(combine.summary())
+'''
 
 # Compile models
-generator.compile(loss='categorical_crossentropy',
+generator.compile(loss='logcosh',
                   optimizer='adam',
-                  metrics=['accuracy'])
-discriminator.compile(loss='categorical_crossentropy',
-                      optimizer='sgd',
-                      metrics=['accuracy'])
-combine.compile(loss='categorical_crossentropy',
+                  metrics=['acc'])
+discriminator.compile(loss='logcosh',
+                      optimizer='adam',
+                      metrics=['acc'])
+combine.compile(loss='logcosh',
                 optimizer='adam',
-                metrics=['accuracy'])
+                metrics=['acc'])
 
 # Train models
-for epoch in range(start_epoch, start_epoch + run_epochs):
+for epoch in range(start_epoch + 1, start_epoch + run_epochs + 1):
     print('Epoch:{}'.format(epoch))
+
+    length = len(characters)
 
     # Generating fake images
     print('Generating fake images.')
-    fake_images = generator.predict(raw_images)
+    fake_images = generator.predict(x=raw_images,
+                                    verbose=1)
 
     # Training discriminator
     print('Training discriminator.')
 
     discriminator.trainable = True
-    discriminator.compile(loss='categorical_crossentropy',
-                          optimizer='sgd',
-                          metrics=['accuracy'])
-
+    discriminator.compile(loss='logcosh',
+                          optimizer='adam',
+                          metrics=['acc'])
     images = []
-
     for real, fake in zip(real_images, fake_images):
         images.append(real)
         images.append(fake)
 
     images = numpy.array(images)
 
-    length = len(characters)
-
-    y = [1, 0] * length
+    y = ((1, 0), (0, 1)) * length
     y = numpy.array(y)
-    y = np_utils.to_categorical(y)
 
     discriminator.fit(x=images,
                       y=y,
                       batch_size=2,
-                      epochs=epochs_for_discriminator,
-                      verbose=0)
+                      initial_epoch=discriminator_initial_epoch,
+                      epochs=discriminator_initial_epoch + epochs_for_discriminator,
+                      verbose=2)
+
+    discriminator_initial_epoch += epochs_for_discriminator
 
     # Training generator
     print('Training generator.')
 
     discriminator.trainable = False
-    discriminator.compile(loss='categorical_crossentropy',
-                          optimizer='sgd',
-                          metrics=['accuracy'])
+    discriminator.compile(loss='logcosh',
+                          optimizer='adam',
+                          metrics=['acc'])
 
-    y = [[0, 1]] * length
+    y = ((0, 1),) * length
     y = numpy.array(y).astype('float32')
 
     combine.fit(x=raw_images,
                 y=y,
-                epochs=epochs_for_generator,
+                initial_epoch=generatorr_initial_epoch,
+                epochs=generatorr_initial_epoch + epochs_for_generator,
                 verbose=2)
+
+    generatorr_initial_epoch += epochs_for_generator
 
     # Save image and models
     if(epoch % save_image_rate == 0):
@@ -249,7 +303,9 @@ for epoch in range(start_epoch, start_epoch + run_epochs):
     if(epoch % save_model_rate == 0):
         # Write now epoch
         model_data = open(model_data_dir + os.sep + data_file_name, 'wb')
-        pickle.dump(epoch + 1, model_data)
+        pickle.dump(epoch, model_data)
+        pickle.dump(generatorr_initial_epoch, model_data)
+        pickle.dump(discriminator_initial_epoch, model_data)
         model_data.close()
 
         # Save model
