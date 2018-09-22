@@ -27,7 +27,6 @@ data_file_name = 'model.pickle'
 
 # Define running args
 run_epochs = 10
-epochs_for_discriminator = 2
 epochs_for_generator = 5
 save_image_rate = 1
 save_model_rate = 5
@@ -35,8 +34,6 @@ save_model_rate = 5
 
 # Define model args
 l2_rate = 0.01
-elu_alpha = 1.0
-
 
 # Load model datas
 trained = os.path.exists(model_data_dir + os.sep + data_file_name)
@@ -93,10 +90,10 @@ for character in characters:
 # Process image
 raw_images = numpy.array(raw_images)
 raw_images = raw_images.reshape(
-    raw_images.shape[0], 128, 128, 2).astype('float32') / 127.5 - 1
+    raw_images.shape[0], 128, 128, 2).astype('float32') / 255
 real_images = numpy.array(real_images)
 real_images = real_images.reshape(
-    real_images.shape[0], 128, 128, 2).astype('float32') / 127.5 - 1
+    real_images.shape[0], 128, 128, 2).astype('float32') / 255
 
 
 # Define the models
@@ -183,77 +180,15 @@ generator = Sequential([
            activation='sigmoid'),
 ])
 
-discriminator = Sequential([
-    Conv2D(input_shape=(128, 128, 2),
-           filters=12,
-           kernel_size=3,
-           strides=2,
-           kernel_initializer='uniform',
-           kernel_regularizer=l2(l2_rate),
-           padding='same'),
-    PReLU(),
-    BatchNormalization(),
-    Conv2D(filters=24,
-           kernel_size=3,
-           strides=2,
-           kernel_initializer='uniform',
-           kernel_regularizer=l2(l2_rate),
-           padding='same'),
-    PReLU(),
-    BatchNormalization(),
-    Conv2D(filters=48,
-           kernel_size=3,
-           strides=2,
-           kernel_initializer='uniform',
-           kernel_regularizer=l2(l2_rate),
-           padding='same'),
-    PReLU(),
-    BatchNormalization(),
-    Flatten(),
-    Dense(units=2048,
-          kernel_initializer='uniform',
-          kernel_regularizer=l2(l2_rate)),
-    PReLU(),
-    BatchNormalization(),
-    Dense(units=16,
-          kernel_initializer='uniform',
-          kernel_regularizer=l2(l2_rate)),
-    PReLU(),
-    Dense(units=1,
-          kernel_initializer='uniform',
-          kernel_regularizer=l2(l2_rate),
-          activation='sigmoid')
-])
-
-
-# Load trained models
-if trained:
-    generator = load_model(model_data_dir + os.sep + 'generator.h5')
-    discriminator = load_model(model_data_dir + os.sep + 'discriminator.h5')
-
-
-# Connect generator with discriminator
-discriminator.trainable = False
-combine = Sequential([generator, discriminator])
-
 
 # Print model struct
 print(generator.summary())
-print(discriminator.summary())
-print(combine.summary())
 
 
 # Compile models
 generator.compile(loss='logcosh',
-                  optimizer='adam',
+                  optimizer='sgd',
                   metrics=['acc'])
-discriminator.compile(loss='logcosh',
-                      optimizer='adam',
-                      metrics=['acc'])
-combine.compile(loss='logcosh',
-                optimizer='adam',
-                metrics=['acc'])
-
 
 # Train models
 for epoch in range(start_epoch + 1, start_epoch + run_epochs + 1):
@@ -261,59 +196,22 @@ for epoch in range(start_epoch + 1, start_epoch + run_epochs + 1):
 
     length = len(characters)
 
-    # Generating fake images
-    print(Fore.BLUE + Style.BRIGHT + 'Generating fake images.')
-    fake_images = generator.predict(x=raw_images,
-                                    verbose=1)
-
-    # Training discriminator
-    print(Fore.BLUE + Style.BRIGHT + 'Training discriminator.')
-
-    discriminator.trainable = True
-    discriminator.compile(loss='logcosh',
-                          optimizer='adam',
-                          metrics=['acc'])
-    images = []
-    for real, fake in zip(real_images, fake_images):
-        images.append(real)
-        images.append(fake)
-
-    images = numpy.array(images)
-
-    y = (0, 1) * length
-    y = numpy.array(y)
-
-    discriminator.fit(x=images,
-                      y=y,
-                      batch_size=2,
-                      initial_epoch=discriminator_initial_epoch,
-                      epochs=discriminator_initial_epoch + epochs_for_discriminator,
-                      verbose=2)
-
-    discriminator_initial_epoch += epochs_for_discriminator
-
     # Training generator
     print(Fore.BLUE + Style.BRIGHT + 'Training generator.')
 
-    discriminator.trainable = False
-    discriminator.compile(loss='logcosh',
-                          optimizer='adam',
-                          metrics=['acc'])
-
-    y = (1,) * length
-    y = numpy.array(y).astype('float32')
-
-    combine.fit(x=raw_images,
-                y=y,
-                initial_epoch=generatorr_initial_epoch,
-                epochs=generatorr_initial_epoch + epochs_for_generator,
-                verbose=2)
-
-    generatorr_initial_epoch += epochs_for_generator
+    generator.fit(x=raw_images,
+                  y=real_images,
+                  initial_epoch=generatorr_initial_epoch,
+                  epochs=generatorr_initial_epoch + epochs_for_generator,
+                  verbose=2)
 
     # Save image
     if(epoch % save_image_rate == 0):
-        save_image = ((fake_images[0] + 1) * 127.5).astype('uint8')
+        # Generating fake images
+        print(Fore.BLUE + Style.BRIGHT + 'Generating fake images.')
+        fake_images = generator.predict(x=raw_images,
+                                        verbose=1)
+        save_image = (fake_images[0] * 255).astype('uint8')
         Image.fromarray(save_image, mode='LA').save(
             fake_img_dir + os.sep + str(epoch) + '.png')
 
@@ -325,11 +223,9 @@ for epoch in range(start_epoch + 1, start_epoch + run_epochs + 1):
         model_data = open(model_data_dir + os.sep + data_file_name, 'wb')
         pickle.dump(epoch, model_data)
         pickle.dump(generatorr_initial_epoch, model_data)
-        pickle.dump(discriminator_initial_epoch, model_data)
         model_data.close()
 
         # Save model
         generator.save(model_data_dir + os.sep + 'generator.h5')
-        discriminator.save(model_data_dir + os.sep + 'discriminator.h5')
 
         print(Fore.GREEN + Style.BRIGHT + 'Models saved.')
