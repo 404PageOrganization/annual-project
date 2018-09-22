@@ -1,7 +1,7 @@
 from keras.utils import np_utils
 from keras.regularizers import l2
 from keras.models import Sequential, load_model
-from keras.layers import Dense, BatchNormalization, Conv2D, MaxPooling2D, Flatten, Reshape, UpSampling2D, PReLU, ELU
+from keras.layers import Dense, BatchNormalization, Conv2D, Flatten, Reshape, UpSampling2D, PReLU, ELU
 from PIL import Image, ImageDraw, ImageFont
 from colorama import init, Fore, Style
 import pickle
@@ -35,7 +35,6 @@ save_model_rate = 5
 
 # Define model args
 l2_rate = 0.01
-elu_alpha = 1.0
 
 
 # Load model datas
@@ -105,7 +104,7 @@ generator = Sequential([
            filters=12,
            kernel_size=3,
            strides=2,
-           # kernel_initializer='uniform',
+           # # kernel_initializer='uniform',
            kernel_regularizer=l2(l2_rate),
            padding='same'),
     PReLU(),
@@ -113,7 +112,7 @@ generator = Sequential([
     Conv2D(filters=24,
            kernel_size=3,
            strides=2,
-           # kernel_initializer='uniform',
+           # # kernel_initializer='uniform',
            kernel_regularizer=l2(l2_rate),
            padding='same'),
     PReLU(),
@@ -121,47 +120,17 @@ generator = Sequential([
     Conv2D(filters=48,
            kernel_size=3,
            strides=2,
-           # kernel_initializer='uniform',
+           # # kernel_initializer='uniform',
            kernel_regularizer=l2(l2_rate),
            padding='same'),
     PReLU(),
     BatchNormalization(),
-    Flatten(),
-    Dense(units=12288,
-          # kernel_initializer='uniform',
-          kernel_regularizer=l2(l2_rate)),
-    PReLU(),
-    BatchNormalization(),
-    Dense(units=2048,
-          # kernel_initializer='uniform',
-          kernel_regularizer=l2(l2_rate)),
-    PReLU(),
-    BatchNormalization(),
-    Dense(units=128,
-          # kernel_initializer='uniform',
-          kernel_regularizer=l2(l2_rate)),
-    PReLU(),
-    BatchNormalization(),
-    Dense(units=128,
-          # kernel_initializer='uniform',
-          kernel_regularizer=l2(l2_rate)),
-    PReLU(),
-    BatchNormalization(),
-    Dense(units=2048,
-          # kernel_initializer='uniform',
-          kernel_regularizer=l2(l2_rate)),
-    PReLU(),
-    BatchNormalization(),
-    Dense(units=12288,
-          # kernel_initializer='uniform',
-          kernel_regularizer=l2(l2_rate)),
-    Reshape((16, 16, 48)),
     UpSampling2D(size=2),
     PReLU(),
     BatchNormalization(),
     Conv2D(filters=24,
            kernel_size=3,
-           # kernel_initializer='uniform',
+           # # kernel_initializer='uniform',
            kernel_regularizer=l2(l2_rate),
            padding='same'),
     UpSampling2D(size=2),
@@ -169,7 +138,7 @@ generator = Sequential([
     BatchNormalization(),
     Conv2D(filters=12,
            kernel_size=3,
-           # kernel_initializer='uniform',
+           # # kernel_initializer='uniform',
            kernel_regularizer=l2(l2_rate),
            padding='same'),
     UpSampling2D(size=2),
@@ -177,7 +146,7 @@ generator = Sequential([
     BatchNormalization(),
     Conv2D(filters=2,
            kernel_size=3,
-           # kernel_initializer='uniform',
+           # # kernel_initializer='uniform',
            kernel_regularizer=l2(l2_rate),
            padding='same',
            activation='sigmoid'),
@@ -187,8 +156,8 @@ discriminator = Sequential([
     Conv2D(input_shape=(128, 128, 2),
            filters=12,
            kernel_size=3,
-           strides=2,
-           kernel_initializer='uniform',
+           strides=4,
+           # kernel_initializer='uniform',
            kernel_regularizer=l2(l2_rate),
            padding='same'),
     PReLU(),
@@ -196,7 +165,7 @@ discriminator = Sequential([
     Conv2D(filters=24,
            kernel_size=3,
            strides=2,
-           kernel_initializer='uniform',
+           # kernel_initializer='uniform',
            kernel_regularizer=l2(l2_rate),
            padding='same'),
     PReLU(),
@@ -204,23 +173,37 @@ discriminator = Sequential([
     Conv2D(filters=48,
            kernel_size=3,
            strides=2,
-           kernel_initializer='uniform',
+           # kernel_initializer='uniform',
            kernel_regularizer=l2(l2_rate),
            padding='same'),
     PReLU(),
     BatchNormalization(),
-    Flatten(),
-    Dense(units=2048,
-          kernel_initializer='uniform',
-          kernel_regularizer=l2(l2_rate)),
+    Conv2D(filters=24,
+           kernel_size=3,
+           strides=2,
+           # kernel_initializer='uniform',
+           kernel_regularizer=l2(l2_rate),
+           padding='same'),
     PReLU(),
     BatchNormalization(),
-    Dense(units=16,
-          kernel_initializer='uniform',
-          kernel_regularizer=l2(l2_rate)),
+    Conv2D(filters=6,
+           kernel_size=3,
+           strides=2,
+           # kernel_initializer='uniform',
+           kernel_regularizer=l2(l2_rate),
+           padding='same'),
+    PReLU(),
+    BatchNormalization(),
+    Conv2D(filters=1,
+           kernel_size=3,
+           strides=2,
+           # kernel_initializer='uniform',
+           kernel_regularizer=l2(l2_rate),
+           padding='same'),
+    Flatten(),
     PReLU(),
     Dense(units=1,
-          kernel_initializer='uniform',
+          # kernel_initializer='uniform',
           kernel_regularizer=l2(l2_rate),
           activation='sigmoid')
 ])
@@ -245,13 +228,13 @@ print(combine.summary())
 
 # Compile models
 generator.compile(loss='logcosh',
-                  optimizer='adam',
+                  optimizer='sgd',
                   metrics=['acc'])
 discriminator.compile(loss='logcosh',
-                      optimizer='adam',
+                      optimizer='sgd',
                       metrics=['acc'])
 combine.compile(loss='logcosh',
-                optimizer='adam',
+                optimizer='sgd',
                 metrics=['acc'])
 
 
@@ -271,7 +254,7 @@ for epoch in range(start_epoch + 1, start_epoch + run_epochs + 1):
 
     discriminator.trainable = True
     discriminator.compile(loss='logcosh',
-                          optimizer='adam',
+                          optimizer='sgd',
                           metrics=['acc'])
     images = []
     for real, fake in zip(real_images, fake_images):
@@ -297,7 +280,7 @@ for epoch in range(start_epoch + 1, start_epoch + run_epochs + 1):
 
     discriminator.trainable = False
     discriminator.compile(loss='logcosh',
-                          optimizer='adam',
+                          optimizer='sgd',
                           metrics=['acc'])
 
     y = (1,) * length
