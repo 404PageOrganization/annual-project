@@ -5,4 +5,6 @@
 
 #### 安装环境
 
-conda install keras pillow pandas
+```bash
+conda install keras pillow
+```
