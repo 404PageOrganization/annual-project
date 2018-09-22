@@ -1,7 +1,7 @@
 from keras.utils import np_utils
 from keras.regularizers import l2
 from keras.models import Sequential, load_model
-from keras.layers import Dense, BatchNormalization, Conv2D, MaxPooling2D, Flatten, Reshape, UpSampling2D, PReLU, ELU
+from keras.layers import BatchNormalization, Conv2D, UpSampling2D, PReLU
 from PIL import Image, ImageDraw, ImageFont
 from colorama import init, Fore, Style
 import pickle
@@ -26,7 +26,7 @@ data_file_name = 'model.pickle'
 
 
 # Define running args
-run_epochs = 10
+run_epochs = 5
 epochs_for_generator = 5
 save_image_rate = 1
 save_model_rate = 5
@@ -35,6 +35,7 @@ save_model_rate = 5
 # Define model args
 l2_rate = 0.01
 
+
 # Load model datas
 trained = os.path.exists(model_data_dir + os.sep + data_file_name)
 
@@ -42,7 +43,6 @@ if trained:
     model_data = open(model_data_dir + os.sep + data_file_name, 'rb')
     start_epoch = pickle.load(model_data)
     generatorr_initial_epoch = pickle.load(model_data)
-    discriminator_initial_epoch = pickle.load(model_data)
     model_data.close()
 else:
     start_epoch = 0
@@ -90,16 +90,24 @@ for character in characters:
 # Process image
 raw_images = numpy.array(raw_images)
 raw_images = raw_images.reshape(
-    raw_images.shape[0], 128, 128, 2).astype('float32') / 255
+    raw_images.shape[0], 128, 128, 2).astype('float32') / 127.5 - 1
 real_images = numpy.array(real_images)
 real_images = real_images.reshape(
-    real_images.shape[0], 128, 128, 2).astype('float32') / 255
+    real_images.shape[0], 128, 128, 2).astype('float32') / 127.5 - 1
 
+
+# Save sample images
+real_sample = ((real_images[0] + 1) * 127.5).astype('uint8')
+raw_sample = ((raw_images[0] + 1) * 127.5).astype('uint8')
+Image.fromarray(real_sample, mode='LA').save(
+    fake_img_dir + os.sep + 'real_img.png')
+Image.fromarray(raw_sample, mode='LA').save(
+    fake_img_dir + os.sep + 'raw_img.png')
 
 # Define the models
 generator = Sequential([
     Conv2D(input_shape=(128, 128, 2),
-           filters=12,
+           filters=8,
            kernel_size=3,
            strides=2,
            # kernel_initializer='uniform',
@@ -107,7 +115,7 @@ generator = Sequential([
            padding='same'),
     PReLU(),
     BatchNormalization(),
-    Conv2D(filters=24,
+    Conv2D(filters=32,
            kernel_size=3,
            strides=2,
            # kernel_initializer='uniform',
@@ -115,79 +123,57 @@ generator = Sequential([
            padding='same'),
     PReLU(),
     BatchNormalization(),
-    Conv2D(filters=48,
-           kernel_size=3,
+    Conv2D(filters=64,
+           kernel_size=5,
            strides=2,
            # kernel_initializer='uniform',
            kernel_regularizer=l2(l2_rate),
            padding='same'),
     PReLU(),
     BatchNormalization(),
-    Flatten(),
-    Dense(units=12288,
-          # kernel_initializer='uniform',
-          kernel_regularizer=l2(l2_rate)),
+    Conv2D(filters=64,
+           kernel_size=5,
+           # kernel_initializer='uniform',
+           kernel_regularizer=l2(l2_rate),
+           padding='same'),
     PReLU(),
-    BatchNormalization(),
-    Dense(units=2048,
-          # kernel_initializer='uniform',
-          kernel_regularizer=l2(l2_rate)),
-    PReLU(),
-    BatchNormalization(),
-    Dense(units=128,
-          # kernel_initializer='uniform',
-          kernel_regularizer=l2(l2_rate)),
-    PReLU(),
-    BatchNormalization(),
-    Dense(units=128,
-          # kernel_initializer='uniform',
-          kernel_regularizer=l2(l2_rate)),
-    PReLU(),
-    BatchNormalization(),
-    Dense(units=2048,
-          # kernel_initializer='uniform',
-          kernel_regularizer=l2(l2_rate)),
-    PReLU(),
-    BatchNormalization(),
-    Dense(units=12288,
-          # kernel_initializer='uniform',
-          kernel_regularizer=l2(l2_rate)),
-    Reshape((16, 16, 48)),
     UpSampling2D(size=2),
-    PReLU(),
     BatchNormalization(),
-    Conv2D(filters=24,
+    Conv2D(filters=32,
            kernel_size=3,
            # kernel_initializer='uniform',
            kernel_regularizer=l2(l2_rate),
            padding='same'),
-    UpSampling2D(size=2),
     PReLU(),
+    UpSampling2D(size=2),
     BatchNormalization(),
-    Conv2D(filters=12,
+    Conv2D(filters=8,
            kernel_size=3,
            # kernel_initializer='uniform',
            kernel_regularizer=l2(l2_rate),
            padding='same'),
-    UpSampling2D(size=2),
     PReLU(),
+    UpSampling2D(size=2),
     BatchNormalization(),
     Conv2D(filters=2,
            kernel_size=3,
            # kernel_initializer='uniform',
            kernel_regularizer=l2(l2_rate),
            padding='same',
-           activation='sigmoid'),
+           activation='tanh'),
 ])
 
 
 # Print model struct
 print(generator.summary())
 
+# Load trained models
+if trained:
+    generator = load_model(model_data_dir + os.sep + 'generator.h5')
 
 # Compile models
 generator.compile(loss='logcosh',
-                  optimizer='sgd',
+                  optimizer='Adagrad',
                   metrics=['acc'])
 
 # Train models
@@ -205,13 +191,14 @@ for epoch in range(start_epoch + 1, start_epoch + run_epochs + 1):
                   epochs=generatorr_initial_epoch + epochs_for_generator,
                   verbose=2)
 
+    generatorr_initial_epoch += epochs_for_generator
+
     # Save image
     if(epoch % save_image_rate == 0):
         # Generating fake images
         print(Fore.BLUE + Style.BRIGHT + 'Generating fake images.')
-        fake_images = generator.predict(x=raw_images,
-                                        verbose=1)
-        save_image = (fake_images[0] * 255).astype('uint8')
+        fake_images = generator.predict(x=raw_images, verbose=1)
+        save_image = ((fake_images[0] + 1) * 127.5).astype('uint8')
         Image.fromarray(save_image, mode='LA').save(
             fake_img_dir + os.sep + str(epoch) + '.png')
 
