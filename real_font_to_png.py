@@ -1,18 +1,29 @@
 # coding utf-8
 
+import os
+
 from PIL import Image, ImageDraw, ImageFont
 import os
 
 # Define the abspath
 fonts_dir = 'fonts'
 real_img_dir = 'real_img'
-raw_img_dir = 'raw_img'
+
+# Read test chinese characters
+characters = open('test.txt', 'r',
+                  encoding='utf-8').read().replace('\n', '')
+
+# Make all directories
+for output_text in characters:
+    dir = real_img_dir + os.sep + output_text
+    if not os.path.exists(dir):
+        os.mkdir(dir)
 
 # Read 3500 most used chinese characters
 characters = open('test.txt', 'r', encoding='utf-8').read().replace('\n', '')
 
 # One item in list is a file named ".DS_Store", not a font file, so ignore it
-font_list = [name for name in os.listdir(fonts_dir) if name != '.DS_Store']
+font_list = [name for name in os.listdir(fonts_dir) if name[0] != '.']
 
 # Use 1 font to generate real img
 font_name = font_list[0]
