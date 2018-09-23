@@ -6,3 +6,5 @@
 /fake_img_mosaicking
 /model_data
 test.txt
+.DS_Store
+*/.DS_Store
