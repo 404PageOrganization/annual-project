@@ -2,7 +2,7 @@ from keras.utils import np_utils
 from keras.regularizers import l2
 from keras.models import Sequential, load_model
 from keras.layers import BatchNormalization, Conv2D, UpSampling2D, PReLU
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
 from colorama import init, Fore, Style
 import pickle
 import os
@@ -19,6 +19,7 @@ init(autoreset=True)
 
 # Define abspaths
 fonts_dir = 'fonts'
+raw_img_dir = 'raw_img'
 real_img_dir = 'real_img'
 fake_img_dir = 'fake_img'
 model_data_dir = 'model_data'
@@ -61,30 +62,13 @@ for real_img_file in [name for name in os.listdir(real_img_dir) if name != '.DS_
         characters.append(real_img_file)
 
 
-# Generate raw images
+# Read raw images & characters
 raw_images = []
 
-# Read 1 font
-font_name = [name for name in os.listdir(fonts_dir) if name != '.DS_Store'][0]
-
-# Read font by using truetype
-font = ImageFont.truetype(fonts_dir + os.sep + font_name, 96)
-
-for character in characters:
-
-    # Create a L with alpha img
-    img = Image.new(mode='LA', size=(128, 128), color=(255, 0))
-
-    draw = ImageDraw.Draw(img)
-
-    # Make the font drawn on center
-    text_size = draw.textsize(character, font)
-    text_w = text_size[0]
-    text_h = text_size[1]
-    draw.text((64 - text_w / 2, 64 - text_h / 2),
-              character, font=font, fill=(0, 255))
-
-    raw_images.append(list(img.getdata()))
+for raw_img_file in [name for name in os.listdir(raw_img_dir) if name != '.DS_Store']:
+    for file_name in [name for name in os.listdir(raw_img_dir + os.sep + raw_img_file) if name != '.DS_Store']:
+        raw_images.append(list(Image.open(raw_img_dir + os.sep +
+                                          raw_img_file + os.sep + file_name).getdata()))
 
 
 # Process image
@@ -173,7 +157,7 @@ if trained:
 
 # Compile models
 generator.compile(loss='logcosh',
-                  optimizer='Adagrad',
+                  optimizer='Adadelta',
                   metrics=['acc'])
 
 # Train models
@@ -198,9 +182,11 @@ for epoch in range(start_epoch + 1, start_epoch + run_epochs + 1):
         # Generating fake images
         print(Fore.BLUE + Style.BRIGHT + 'Generating fake images.')
         fake_images = generator.predict(x=raw_images, verbose=1)
-        save_image = ((fake_images[0] + 1) * 127.5).astype('uint8')
-        Image.fromarray(save_image, mode='LA').save(
-            fake_img_dir + os.sep + str(epoch) + '.png')
+
+        for character, fake_image in zip(characters, fake_images):
+            save_image = ((fake_image + 1) * 127.5).astype('uint8')
+            Image.fromarray(save_image, mode='LA').save(
+                fake_img_dir + os.sep + character + str(epoch) + '.png')
 
         print(Fore.GREEN + Style.BRIGHT + 'Image saved.')
 
