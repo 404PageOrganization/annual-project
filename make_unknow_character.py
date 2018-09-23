@@ -2,13 +2,14 @@
 
 from PIL import Image, ImageDraw, ImageFont
 import os
+import os
 
 # Define the abspath
 fonts_dir = 'fonts'
 raw_img_dir = 'raw_img'
 
 # Read 3500 most used chinese characters
-characters = open('test.txt', 'r',
+characters = open('characters.txt', 'r',
                   encoding='utf-8').read().replace('\n', '')
 
 # Make all directories
