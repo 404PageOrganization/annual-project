@@ -3,5 +3,6 @@
 /raw_img
 /real_img
 /fake_img
+/fake_img_mosaicking
 /model_data
 test.txt
