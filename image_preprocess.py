@@ -32,7 +32,6 @@ def extract_peek(array_vals, val_min, range_min):
 
 def crop_char(img, peek_range):
     # 
-    global count
     for i, peek_range in enumerate(peek_ranges):
         for vertical_range in vertical_peek_ranges2d[i]:
             x = vertical_range[0]
@@ -96,7 +95,7 @@ print('strat running')
 for file_name in os.listdir(in_dir):
     # read raw image
     img = cv2.imread(in_dir + file_name, 0)
-    print('read image')
+    print('succeeded: reading image')
     
     # binaryzation & denoising
     ret, img_bi = cv2.threshold(img, 75, 255, cv2.THRESH_BINARY_INV)
@@ -106,7 +105,7 @@ for file_name in os.listdir(in_dir):
     img_dst = img_bi
     img_dst = cv2.fastNlMeansDenoising(img_bi,10,7,21)
     cv2.imwrite(out_dir + '!' + file_name, img_dst)
-    print('binaryze & denoise')
+    print('succeeded: binaryzing & denoising')
 
     # horizontal projection
     horizontal_sum = np.sum(img_dst, axis=1)
@@ -129,7 +128,7 @@ for file_name in os.listdir(in_dir):
         vertical_sum = np.sum(line_img, axis=0)
         vertical_peek_ranges = extract_peek(vertical_sum, val_min, range_min)
         vertical_peek_ranges2d.append(vertical_peek_ranges)
-    print('project in two directions')
+    print('succeeded: projecting in two directions')
 
     # invert the image into a normal one
     #img2 = img.copy()
