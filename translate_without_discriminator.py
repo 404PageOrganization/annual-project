@@ -55,8 +55,8 @@ else:
 real_images = []
 characters = []
 
-for real_img_file in [name for name in os.listdir(real_img_dir) if name != '.DS_Store']:
-    for file_name in [name for name in os.listdir(real_img_dir + os.sep + real_img_file) if name != '.DS_Store']:
+for real_img_file in [name for name in os.listdir(real_img_dir) if name[0] != '.']:
+    for file_name in [name for name in os.listdir(real_img_dir + os.sep + real_img_file) if name[0] != '.']:
         real_images.append(list(Image.open(real_img_dir + os.sep +
                                            real_img_file + os.sep + file_name).getdata()))
         characters.append(real_img_file)
@@ -65,8 +65,8 @@ for real_img_file in [name for name in os.listdir(real_img_dir) if name != '.DS_
 # Read raw images & characters
 raw_images = []
 
-for raw_img_file in [name for name in os.listdir(raw_img_dir) if name != '.DS_Store']:
-    for file_name in [name for name in os.listdir(raw_img_dir + os.sep + raw_img_file) if name != '.DS_Store']:
+for raw_img_file in characters:
+    for file_name in [name for name in os.listdir(raw_img_dir + os.sep + raw_img_file) if name[0] != '.']:
         raw_images.append(list(Image.open(raw_img_dir + os.sep +
                                           raw_img_file + os.sep + file_name).getdata()))
 

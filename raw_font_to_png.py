@@ -19,7 +19,7 @@ for output_text in characters:
 
 # Use all fonts in fonts' directory
 # One item in list is a file named ".DS_Store", not a font file, so ignore it
-for font_name in [name for name in os.listdir(fonts_dir) if name != '.DS_Store']:
+for font_name in [name for name in os.listdir(fonts_dir) if name[0] != '.']:
 
     # Read font by using truetype
     font = ImageFont.truetype(fonts_dir + os.sep + font_name, 96)

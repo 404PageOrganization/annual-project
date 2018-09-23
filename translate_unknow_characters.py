@@ -26,8 +26,8 @@ l2_rate = 0.01
 raw_images = []
 characters = []
 
-for raw_img_file in [name for name in os.listdir(raw_img_dir) if name != '.DS_Store']:
-    for file_name in [name for name in os.listdir(raw_img_dir + os.sep + raw_img_file) if name != '.DS_Store']:
+for raw_img_file in [name for name in os.listdir(raw_img_dir) if name[0] != '.']:
+    for file_name in [name for name in os.listdir(raw_img_dir + os.sep + raw_img_file) if name[0] != '.']:
         raw_images.append(list(Image.open(raw_img_dir + os.sep +
                                           raw_img_file + os.sep + file_name).getdata()))
         characters.append(raw_img_file)
