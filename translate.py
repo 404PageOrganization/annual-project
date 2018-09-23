@@ -56,8 +56,8 @@ else:
 real_images = []
 characters = []
 
-for real_img_file in [name for name in os.listdir(real_img_dir) if name != '.DS_Store']:
-    for file_name in [name for name in os.listdir(real_img_dir + os.sep + real_img_file) if name != '.DS_Store']:
+for real_img_file in [name for name in os.listdir(real_img_dir) if name[0] != '.']:
+    for file_name in [name for name in os.listdir(real_img_dir + os.sep + real_img_file) if name[0] != '.']:
         real_images.append(list(Image.open(real_img_dir + os.sep +
                                            real_img_file + os.sep + file_name).getdata()))
         characters.append(real_img_file)
@@ -67,7 +67,7 @@ for real_img_file in [name for name in os.listdir(real_img_dir) if name != '.DS_
 raw_images = []
 
 # Read 1 font
-font_name = [name for name in os.listdir(fonts_dir) if name != '.DS_Store'][0]
+font_name = [name for name in os.listdir(fonts_dir) if name[0] != '.'][0]
 
 # Read font by using truetype
 font = ImageFont.truetype(fonts_dir + os.sep + font_name, 96)
