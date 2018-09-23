@@ -7,7 +7,7 @@ from keras import backend as K
 from keras.engine.topology import Layer, InputSpec
 from keras.legacy import interfaces
 from keras.models import Model
-from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, GlobalAveragePooling2D, BatchNormalization, concatenate
+from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, GlobalAveragePooling2D, PReLU, BatchNormalization, concatenate
 from keras.utils import np_utils
 
 
@@ -40,24 +40,20 @@ class GlobalStandardPooling2D(Layer):
         return dict(list(base_config.items()) + list(config.items()))
 
 
-fonts_dir = 'fonts'
-real_img_dir = 'raw_img'
+fonts_dir = './fonts/'
+real_img_dir = './raw_img/'
 characters = []
 raw_images = []
 labels = []
 
 
 for real_img_file in [name for name in os.listdir(real_img_dir) if name != '.DS_Store']:
-    for file_name in [name for name in os.listdir(real_img_dir + os.sep + real_img_file) if name != '.DS_Store']:
-        raw_images.append(list(Image.open(real_img_dir + os.sep +
-                                          real_img_file + os.sep + file_name).getdata()))
-        labels.append(0)
-        characters.append(real_img_file)
+    characters.append(real_img_file)
 
 
 for i, font_name in enumerate([name for name in os.listdir(fonts_dir) if name != '.DS_Store']):
     # Read font by using truetype
-    font = ImageFont.truetype(fonts_dir + os.sep + font_name, 96)
+    font = ImageFont.truetype(fonts_dir + font_name, 96)
     for character in characters:
         # Create a L with alpha img
         img = Image.new(mode='LA', size=(128, 128), color=(255, 0))
@@ -70,13 +66,14 @@ for i, font_name in enumerate([name for name in os.listdir(fonts_dir) if name !=
                   character, font=font, fill=(0, 255))
 
         raw_images.append(list(img.getdata()))
-        labels.append(str(i + 1))
+        labels.append(i)
+print('succeeded: reading fonts')
 
 
 raw_images = numpy.array(raw_images)
 raw_images = raw_images.reshape(
     raw_images.shape[0], 128, 128, 2).astype('float32') / 255
-labels = numpy.array(labels).astype('float32')
+labels = numpy.array(labels)
 labels = np_utils.to_categorical(labels)
 
 
@@ -85,20 +82,20 @@ input = Input(shape=(128, 128, 2), name='input')
 x = Conv2D(input_shape=(128, 128, 2),
            filters=32,
            kernel_size=3,
-           padding='same',
-           activation='relu')(input)
+           padding='same')(input)
+x = PReLU()(x)
 x = MaxPooling2D(pool_size=2)(x)
 x = BatchNormalization()(x)
 x = Conv2D(filters=64,
            kernel_size=3,
-           padding='same',
-           activation='relu')(x)
+           padding='same')(x)
+x = PReLU()(x)
 x = MaxPooling2D(pool_size=2)(x)
 x = BatchNormalization()(x)
 x = Conv2D(filters=128,
            kernel_size=3,
-           padding='same',
-           activation='relu')(x)
+           padding='same')(x)
+x = PReLU()(x)
 x = MaxPooling2D(pool_size=2)(x)
 x = BatchNormalization()(x)
 x = AveragePooling2D(pool_size=2)(x)
@@ -107,10 +104,10 @@ avgpool = GlobalAveragePooling2D()(x)
 stdpool = GlobalStandardPooling2D()(x)
 x = concatenate([avgpool, stdpool])
 x = Dense(units=256,
-          kernel_initializer='normal',
-          activation='relu')(x)
-output = Dense(units=2,
-               kernel_initializer='normal',
+          kernel_initializer='random_normal')(x)
+x = PReLU()(x)
+output = Dense(units=5,
+               kernel_initializer='random_normal',
                activation='softmax',
                name='output')(x)
 model = Model(inputs=input, outputs=output)
