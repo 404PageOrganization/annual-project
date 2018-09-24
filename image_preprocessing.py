@@ -6,8 +6,8 @@ import numpy as np
 import cv2
 
 
-in_dir = "./raw_img/"
-out_dir = "./real_img/"
+in_dir = "real_img_origin/"
+out_dir = "real_img/"
 val_min = 10    # the threshold value
 range_min = 60    # the minimum size of a character
 count = 0    # the serial number
@@ -31,7 +31,8 @@ def extract_peek(array_vals, val_min, range_min):
 
 
 def crop_char(img, peek_range):
-    # 
+    #
+    global count
     for i, peek_range in enumerate(peek_ranges):
         for vertical_range in vertical_peek_ranges2d[i]:
             x = vertical_range[0]
@@ -49,7 +50,7 @@ def crop_blank(img):
     # remove the blank edges
     img = Image.fromarray(img)
     pix = img.load()
-    print(pix[0,0])
+    print(pix[0, 0])
     w, h = img.size
     x_min = w
     y_min = h
@@ -96,14 +97,14 @@ for file_name in os.listdir(in_dir):
     # read raw image
     img = cv2.imread(in_dir + file_name, 0)
     print('succeeded: reading image')
-    
+
     # binaryzation & denoising
     ret, img_bi = cv2.threshold(img, 75, 255, cv2.THRESH_BINARY_INV)
-    #img_bi = cv2.adaptiveThreshold(img, 255, \
-        #cv2.ADAPTIVE_THRESH_GAUSSIAN_C, \
-        #cv2.THRESH_BINARY_INV, 11, 2)
+    # img_bi = cv2.adaptiveThreshold(img, 255, \
+    #cv2.ADAPTIVE_THRESH_GAUSSIAN_C, \
+    # cv2.THRESH_BINARY_INV, 11, 2)
     img_dst = img_bi
-    img_dst = cv2.fastNlMeansDenoising(img_bi,10,7,21)
+    img_dst = cv2.fastNlMeansDenoising(img_bi, 10, 7, 21)
     cv2.imwrite(out_dir + '!' + file_name, img_dst)
     print('succeeded: binaryzing & denoising')
 
@@ -132,10 +133,10 @@ for file_name in os.listdir(in_dir):
 
     # invert the image into a normal one
     #img2 = img.copy()
-    for i in range(0,img.shape[0]):
-        for j in range(0,img.shape[1]):
-            if img[i,j] > 180:
-                img[i,j] = 255
+    for i in range(0, img.shape[0]):
+        for j in range(0, img.shape[1]):
+            if img[i, j] > 180:
+                img[i, j] = 255
             #img2[i,j]= 255 - img[i,j]
     #img = Image.fromarray(img)
     #img2 = Image.fromarray(img2)

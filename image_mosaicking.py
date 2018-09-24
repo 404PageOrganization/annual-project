@@ -3,15 +3,15 @@
 import os
 from PIL import Image, ImageDraw, ImageFont
 
-in_dir = './fake_img/'
-out_dir = './fake_img_mosaicking/'
+in_dir = 'fake_img/'
+out_dir = 'fake_img_mosaicking/'
 fake_img_name = []
 chars = []
 
 img_num = 1
 i = 0
 
-for fake_img_file in [name for name in os.listdir(in_dir) if name != '.DS_Store']:
+for fake_img_file in [name for name in os.listdir(in_dir) if name[0] != '.']:
     fake_img_name.append(fake_img_file)
     name = fake_img_file[0]
     if name not in chars:
