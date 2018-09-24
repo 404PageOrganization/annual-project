@@ -2,7 +2,6 @@
 
 from PIL import Image, ImageDraw, ImageFont
 import os
-import os
 
 # Define the abspath
 fonts_dir = 'fonts'

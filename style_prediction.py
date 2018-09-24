@@ -25,5 +25,5 @@ model = load_model('model_data/style_discriminator.h5',
                    {'GlobalStandardPooling2D': GlobalStandardPooling2D})
 
 prediction = model.predict(real_imgs)
-prediction = numpy.argmax(prediction, axis=1)  # axis = 1是取行
+prediction = numpy.argmax(prediction, axis=1)
 print(prediction)
