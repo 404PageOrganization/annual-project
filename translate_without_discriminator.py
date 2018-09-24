@@ -28,8 +28,7 @@ data_file_name = 'model.pickle'
 
 # Define running args
 run_epochs = 5
-epochs_for_generator = 5
-save_image_rate = 1
+epochs_for_generator = 100
 save_model_rate = 5
 
 
@@ -167,7 +166,6 @@ for epoch in range(start_epoch + 1, start_epoch + run_epochs + 1):
     length = len(characters)
 
     # Training generator
-    print(Fore.BLUE + Style.BRIGHT + 'Training generator.')
 
     generator.fit(x=raw_images,
                   y=real_images,
@@ -177,18 +175,16 @@ for epoch in range(start_epoch + 1, start_epoch + run_epochs + 1):
 
     generatorr_initial_epoch += epochs_for_generator
 
-    # Save image
-    if(epoch % save_image_rate == 0):
-        # Generating fake images
-        print(Fore.BLUE + Style.BRIGHT + 'Generating fake images.')
-        fake_images = generator.predict(x=raw_images, verbose=1)
+    # Save fake images
+    print(Fore.BLUE + Style.BRIGHT + 'Generating fake images.')
+    fake_images = generator.predict(x=raw_images, verbose=1)
 
-        for character, fake_image in zip(characters, fake_images):
-            save_image = ((fake_image + 1) * 127.5).astype('uint8')
-            Image.fromarray(save_image, mode='LA').save(
-                fake_img_dir + os.sep + character + str(epoch) + '.png')
+    for character, fake_image in zip(characters, fake_images):
+        save_image = ((fake_image + 1) * 127.5).astype('uint8')
+        Image.fromarray(save_image, mode='LA').save(
+            fake_img_dir + os.sep + character + str(epoch) + '.png')
 
-        print(Fore.GREEN + Style.BRIGHT + 'Image saved.')
+    print(Fore.GREEN + Style.BRIGHT + 'Image saved.')
 
     # Save models
     if(epoch % save_model_rate == 0):
