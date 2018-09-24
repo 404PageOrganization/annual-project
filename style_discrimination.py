@@ -7,7 +7,7 @@ from keras import backend as K
 from keras.engine.topology import Layer, InputSpec
 from keras.legacy import interfaces
 from keras.models import Model
-from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, GlobalAveragePooling2D, PReLU, BatchNormalization, concatenate
+from keras.layers import Input, Dense, Dropout, Conv2D, MaxPooling2D, AveragePooling2D, GlobalAveragePooling2D, PReLU, BatchNormalization, concatenate
 from keras.utils import np_utils
 
 
@@ -45,6 +45,7 @@ real_img_dir = './raw_img/'
 characters = []
 raw_images = []
 labels = []
+fonts_num = 0
 
 
 for real_img_file in [name for name in os.listdir(real_img_dir) if name != '.DS_Store']:
@@ -67,6 +68,7 @@ for i, font_name in enumerate([name for name in os.listdir(fonts_dir) if name !=
 
         raw_images.append(list(img.getdata()))
         labels.append(i)
+        fonts_num = i + 1
 print('succeeded: reading fonts')
 
 
@@ -105,8 +107,9 @@ stdpool = GlobalStandardPooling2D()(x)
 x = concatenate([avgpool, stdpool])
 x = Dense(units=256,
           kernel_initializer='random_normal')(x)
+x = Dropout(0.25)(x)
 x = PReLU()(x)
-output = Dense(units=5,
+output = Dense(units=fonts_num,
                kernel_initializer='random_normal',
                activation='softmax',
                name='output')(x)
