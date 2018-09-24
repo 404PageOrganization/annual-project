@@ -6,6 +6,7 @@
 /fake_img
 /fake_img_mosaicking
 /model_data
+/__pycache__
 test.txt
 simhei.ttf
 .DS_Store
