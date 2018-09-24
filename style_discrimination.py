@@ -40,19 +40,19 @@ class GlobalStandardPooling2D(Layer):
         return dict(list(base_config.items()) + list(config.items()))
 
 
-fonts_dir = './fonts/'
-real_img_dir = './raw_img/'
+fonts_dir = 'fonts/'
+raw_img_dir = 'raw_img/'
 characters = []
-raw_images = []
+raw_imgs = []
 labels = []
 fonts_num = 0
 
 
-for real_img_file in [name for name in os.listdir(real_img_dir) if name != '.DS_Store']:
-    characters.append(real_img_file)
+for raw_img_file in [name for name in os.listdir(raw_img_dir) if name != '.DS_Store']:
+    characters.append(raw_img_file)
 
 
-for i, font_name in enumerate([name for name in os.listdir(fonts_dir) if name != '.DS_Store']):
+for i, font_name in enumerate([name for name in os.listdir(fonts_dir) if name[0] != '.']):
     # Read font by using truetype
     font = ImageFont.truetype(fonts_dir + font_name, 96)
     for character in characters:
@@ -66,15 +66,15 @@ for i, font_name in enumerate([name for name in os.listdir(fonts_dir) if name !=
         draw.text((64 - text_w / 2, 64 - text_h / 2),
                   character, font=font, fill=(0, 255))
 
-        raw_images.append(list(img.getdata()))
+        raw_imgs.append(list(img.getdata()))
         labels.append(i)
         fonts_num = i + 1
 print('succeeded: reading fonts')
 
 
-raw_images = numpy.array(raw_images)
-raw_images = raw_images.reshape(
-    raw_images.shape[0], 128, 128, 2).astype('float32') / 255
+raw_imgs = numpy.array(raw_imgs)
+raw_imgs = raw_imgs.reshape(
+    raw_imgs.shape[0], 128, 128, 2).astype('float32') / 255
 labels = numpy.array(labels)
 labels = np_utils.to_categorical(labels)
 
@@ -123,9 +123,11 @@ model.compile(
     metrics=['accuracy']
 )
 
-history = model.fit(x=raw_images,
+history = model.fit(x=raw_imgs,
                     y=labels,
                     validation_split=0.2,
                     epochs=10,
                     batch_size=32,
                     verbose=2)
+
+model.save('model_data/style_discriminator.h5')
