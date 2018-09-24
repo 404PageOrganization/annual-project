@@ -84,9 +84,9 @@ for character, real_image, raw_image in zip(characters, real_images, raw_images)
     real_sample = ((real_image + 1) * 127.5).astype('uint8')
     raw_sample = ((raw_image + 1) * 127.5).astype('uint8')
     Image.fromarray(real_sample, mode='LA').save(
-        fake_img_dir + os.sep + 'real_img.png')
+        fake_img_dir + os.sep + character + 'real_img.png')
     Image.fromarray(raw_sample, mode='LA').save(
-        fake_img_dir + os.sep + 'raw_img.png')
+        fake_img_dir + os.sep + character + 'raw_img.png')
 
 # Define the models
 generator = Sequential([
