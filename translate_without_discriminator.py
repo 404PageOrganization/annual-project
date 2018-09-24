@@ -27,8 +27,8 @@ data_file_name = 'model.pickle'
 
 
 # Define running args
-run_epochs = 5
-epochs_for_generator = 100
+run_epochs = 10
+epochs_for_generator = 200
 save_model_rate = 5
 
 
@@ -80,12 +80,13 @@ real_images = real_images.reshape(
 
 
 # Save sample images
-real_sample = ((real_images[0] + 1) * 127.5).astype('uint8')
-raw_sample = ((raw_images[0] + 1) * 127.5).astype('uint8')
-Image.fromarray(real_sample, mode='LA').save(
-    fake_img_dir + os.sep + 'real_img.png')
-Image.fromarray(raw_sample, mode='LA').save(
-    fake_img_dir + os.sep + 'raw_img.png')
+for character, real_image, raw_image in zip(characters, real_images, raw_images):
+    real_sample = ((real_image + 1) * 127.5).astype('uint8')
+    raw_sample = ((raw_image + 1) * 127.5).astype('uint8')
+    Image.fromarray(real_sample, mode='LA').save(
+        fake_img_dir + os.sep + 'real_img.png')
+    Image.fromarray(raw_sample, mode='LA').save(
+        fake_img_dir + os.sep + 'raw_img.png')
 
 # Define the models
 generator = Sequential([
