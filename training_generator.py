@@ -87,7 +87,7 @@ for character in characters:
     draw.text((64 - text_w / 2, 64 - text_h / 2),
               character, font=font, fill=(0, 255))
 
-    raw_images.append(img)
+    raw_images.append(list(img.getdata()))
 
 
 # Process image
