@@ -36,4 +36,4 @@ pip install keras tensorflow tensorflow-gpu pillow colorama
 -   style_discrimination.py 风格识别网络训练
 -   style_prediction.py 风格识别网络判别
 -   training_generator.py 训练风格迁移网络
--   translate_unknow_characters.py 迁移未知字符
+-   transfer_unknow_characters.py 迁移未知字符
