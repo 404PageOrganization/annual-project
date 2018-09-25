@@ -77,17 +77,17 @@ def resize_img(img):
     # resize the image into a 128*128 one and output
     w, h = img.size
     if w == h:
-        w1 = 128
-        h1 = 128
+        w1 = 80
+        h1 = 80
     elif w < h:
-        w1 = int(w * 128 / h)
-        h1 = 128
+        w1 = int(w * 80 / h)
+        h1 = 80
     elif w > h:
-        w1 = 128
-        h1 = int(h * 128 / w)
+        w1 = 80
+        h1 = int(h * 80 / w)
     img = img.resize((w1, h1), Image.ANTIALIAS)
     img_new = Image.new(mode='LA', size=(128, 128), color=(255, 0))
-    img_new.paste(img, (int(64 - w1 / 2), int(64 - h1 / 2)))
+    img_new.paste(img, (int(64 - w1 / 2), int(64 - h1 / 2) + 12))
     img_new.save(out_dir + str(count) + ".png", 'png')
 
 
@@ -99,10 +99,10 @@ for file_name in os.listdir(in_dir):
     print('succeeded: reading image')
 
     # binaryzation & denoising
-    ret, img_bi = cv2.threshold(img, 75, 255, cv2.THRESH_BINARY_INV)
-    # img_bi = cv2.adaptiveThreshold(img, 255, \
-    #cv2.ADAPTIVE_THRESH_GAUSSIAN_C, \
-    # cv2.THRESH_BINARY_INV, 11, 2)
+    ret, img_bi = cv2.threshold(img, 100, 255, cv2.THRESH_BINARY_INV)
+    # img_bi = cv2.adaptiveThreshold(img, 255,
+    #                               cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+    #                               cv2.THRESH_BINARY_INV, 11, 2)
     img_dst = img_bi
     img_dst = cv2.fastNlMeansDenoising(img_bi, 10, 7, 21)
     cv2.imwrite(out_dir + '!' + file_name, img_dst)
