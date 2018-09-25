@@ -31,7 +31,6 @@ run_epochs = 10
 epochs_for_generator = 200
 save_model_rate = 5
 
-
 # Define model args
 l2_rate = 0.01
 
@@ -99,7 +98,7 @@ generator = Sequential([
            padding='same'),
     PReLU(),
     BatchNormalization(),
-    Conv2D(filters=32,
+    Conv2D(filters=16,
            kernel_size=3,
            strides=2,
            # kernel_initializer='uniform',
@@ -107,7 +106,7 @@ generator = Sequential([
            padding='same'),
     PReLU(),
     BatchNormalization(),
-    Conv2D(filters=64,
+    Conv2D(filters=32,
            kernel_size=5,
            strides=2,
            # kernel_initializer='uniform',
@@ -115,7 +114,7 @@ generator = Sequential([
            padding='same'),
     PReLU(),
     BatchNormalization(),
-    Conv2D(filters=64,
+    Conv2D(filters=32,
            kernel_size=5,
            # kernel_initializer='uniform',
            kernel_regularizer=l2(l2_rate),
@@ -123,7 +122,7 @@ generator = Sequential([
     PReLU(),
     UpSampling2D(size=2),
     BatchNormalization(),
-    Conv2D(filters=32,
+    Conv2D(filters=16,
            kernel_size=3,
            # kernel_initializer='uniform',
            kernel_regularizer=l2(l2_rate),
@@ -157,7 +156,7 @@ if trained:
 
 # Compile models
 generator.compile(loss='logcosh',
-                  optimizer='Adadelta',
+                  optimizer='RMSProp',
                   metrics=['acc'])
 
 # Train models
@@ -183,7 +182,7 @@ for epoch in range(start_epoch + 1, start_epoch + run_epochs + 1):
     for character, fake_image in zip(characters, fake_images):
         save_image = ((fake_image + 1) * 127.5).astype('uint8')
         Image.fromarray(save_image, mode='LA').save(
-            fake_img_dir + os.sep + character + str(epoch) + '.png')
+            fake_img_dir + os.sep + character + str(generatorr_initial_epoch) + '.png')
 
     print(Fore.GREEN + Style.BRIGHT + 'Image saved.')
 
