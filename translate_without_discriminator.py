@@ -36,10 +36,10 @@ l2_rate = 0.01
 
 
 # Load model datas
-trained = os.path.exists(model_data_dir + os.sep + data_file_name)
+trained = os.path.exists(model_data_dir + '/' + data_file_name)
 
 if trained:
-    model_data = open(model_data_dir + os.sep + data_file_name, 'rb')
+    model_data = open(model_data_dir + '/' + data_file_name, 'rb')
     start_epoch = pickle.load(model_data)
     generatorr_initial_epoch = pickle.load(model_data)
     model_data.close()
@@ -54,9 +54,9 @@ real_images = []
 characters = []
 
 for real_img_file in [name for name in os.listdir(real_img_dir) if name[0] != '.']:
-    for file_name in [name for name in os.listdir(real_img_dir + os.sep + real_img_file) if name[0] != '.']:
-        real_images.append(list(Image.open(real_img_dir + os.sep +
-                                           real_img_file + os.sep + file_name).getdata()))
+    for file_name in [name for name in os.listdir(real_img_dir + '/' + real_img_file) if name[0] != '.']:
+        real_images.append(list(Image.open(real_img_dir + '/' +
+                                           real_img_file + '/' + file_name).getdata()))
         characters.append(real_img_file)
 
 
@@ -64,9 +64,9 @@ for real_img_file in [name for name in os.listdir(real_img_dir) if name[0] != '.
 raw_images = []
 
 for raw_img_file in characters:
-    for file_name in [name for name in os.listdir(raw_img_dir + os.sep + raw_img_file) if name[0] != '.']:
-        raw_images.append(list(Image.open(raw_img_dir + os.sep +
-                                          raw_img_file + os.sep + file_name).getdata()))
+    for file_name in [name for name in os.listdir(raw_img_dir + '/' + raw_img_file) if name[0] != '.']:
+        raw_images.append(list(Image.open(raw_img_dir + '/' +
+                                          raw_img_file + '/' + file_name).getdata()))
 
 
 # Process image
@@ -83,9 +83,9 @@ for character, real_image, raw_image in zip(characters, real_images, raw_images)
     real_sample = ((real_image + 1) * 127.5).astype('uint8')
     raw_sample = ((raw_image + 1) * 127.5).astype('uint8')
     Image.fromarray(real_sample, mode='LA').save(
-        fake_img_dir + os.sep + character + 'real_img.png')
+        fake_img_dir + '/' + character + 'real_img.png')
     Image.fromarray(raw_sample, mode='LA').save(
-        fake_img_dir + os.sep + character + 'raw_img.png')
+        fake_img_dir + '/' + character + 'raw_img.png')
 
 # Define the models
 generator = Sequential([
@@ -152,7 +152,7 @@ print(generator.summary())
 
 # Load trained models
 if trained:
-    generator = load_model(model_data_dir + os.sep + 'generator.h5')
+    generator = load_model(model_data_dir + '/generator.h5')
 
 # Compile models
 generator.compile(loss='logcosh',
@@ -182,19 +182,19 @@ for epoch in range(start_epoch + 1, start_epoch + run_epochs + 1):
     for character, fake_image in zip(characters, fake_images):
         save_image = ((fake_image + 1) * 127.5).astype('uint8')
         Image.fromarray(save_image, mode='LA').save(
-            fake_img_dir + os.sep + character + str(generatorr_initial_epoch) + '.png')
+            fake_img_dir + '/' + character + str(generatorr_initial_epoch) + '.png')
 
     print(Fore.GREEN + Style.BRIGHT + 'Image saved.')
 
     # Save models
     if(epoch % save_model_rate == 0):
         # Write now epoch
-        model_data = open(model_data_dir + os.sep + data_file_name, 'wb')
+        model_data = open(model_data_dir + '/' + data_file_name, 'wb')
         pickle.dump(epoch, model_data)
         pickle.dump(generatorr_initial_epoch, model_data)
         model_data.close()
 
         # Save model
-        generator.save(model_data_dir + os.sep + 'generator.h5')
+        generator.save(model_data_dir + '/generator.h5')
 
         print(Fore.GREEN + Style.BRIGHT + 'Models saved.')

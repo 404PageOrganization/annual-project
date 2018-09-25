@@ -27,9 +27,9 @@ raw_images = []
 characters = []
 
 for raw_img_file in [name for name in os.listdir(raw_img_dir) if name[0] != '.']:
-    for file_name in [name for name in os.listdir(raw_img_dir + os.sep + raw_img_file) if name[0] != '.']:
-        raw_images.append(list(Image.open(raw_img_dir + os.sep +
-                                          raw_img_file + os.sep + file_name).getdata()))
+    for file_name in [name for name in os.listdir(raw_img_dir + '/' + raw_img_file) if name[0] != '.']:
+        raw_images.append(list(Image.open(raw_img_dir + '/' +
+                                          raw_img_file + '/' + file_name).getdata()))
         characters.append(raw_img_file)
 
 
@@ -103,11 +103,11 @@ generator = Sequential([
 print(generator.summary())
 
 # Load trained models
-generator = load_model(model_data_dir + os.sep + 'generator.h5')
+generator = load_model(model_data_dir + '/generator.h5')
 
 # Compile models
 generator.compile(loss='logcosh',
-                  optimizer='Adadelta',
+                  optimizer='RMSProp',
                   metrics=['acc'])
 
 
@@ -117,4 +117,4 @@ fake_images = generator.predict(x=raw_images, verbose=1)
 for character, fake_image in zip(characters, fake_images):
     save_image = ((fake_image + 1) * 127.5).astype('uint8')
     Image.fromarray(save_image, mode='LA').save(
-        fake_img_dir + os.sep + character + '.png')
+        fake_img_dir + '/' + character + '.png')

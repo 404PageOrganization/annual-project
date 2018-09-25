@@ -13,7 +13,7 @@ characters = open('characters.txt', 'r',
 
 # Make all directories
 for output_text in characters:
-    dir = raw_img_dir + os.sep + output_text
+    dir = raw_img_dir + '/' + output_text
     if not os.path.exists(dir):
         os.mkdir(dir)
 
@@ -22,7 +22,7 @@ for output_text in characters:
 for font_name in [name for name in os.listdir(fonts_dir) if name[0] != '.']:
 
     # Read font by using truetype
-    font = ImageFont.truetype(fonts_dir + os.sep + font_name, 96)
+    font = ImageFont.truetype(fonts_dir + '/' + font_name, 96)
 
     # Traverse all characters
     for output_text in characters:
@@ -40,5 +40,5 @@ for font_name in [name for name in os.listdir(fonts_dir) if name[0] != '.']:
                   output_text, font=font, fill=(0, 255))
 
         # Save the image
-        img.save(raw_img_dir + os.sep + output_text + os.sep +
+        img.save(raw_img_dir + '/' + output_text + '/' +
                  font_name.replace('.ttf', '.png').replace('.ttc', '.png'), "PNG")
