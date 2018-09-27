@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import pickle
 from PIL import Image, ImageDraw, ImageFont
 import random
 import numpy
@@ -18,39 +19,58 @@ raw_img_dir = 'raw_img/'
 characters = []
 raw_imgs = []
 labels = []
+fonts_name = []
+
+BATCH = 256
 
 
-for raw_img_file in [name for name in os.listdir(raw_img_dir) if name != '.DS_Store']:
-    characters.append(raw_img_file)
+# read characters
+characters = open('characters.txt', 'r',
+                  encoding='utf-8').read()
+random.shuffle(characters)
+char_num = len(characters)
+print('succeeded: reading characters)
+
+
+# read fonts name
+for i, font_name in enumerate([name for name in os.listdir(fonts_dir) if name[0] != '.']):
+    # output number of fonts
+    fonts_num = i + 1
+    print(str(i), font_name.replace('.ttf', ''))
+    fonts_name.append(font_name.replace('.ttf', ''))
+with open('fonts_name.dat', 'rb+') as f:
+    pickle.dump(fonts_name, f)
+print('succeeded: reading fonts name')
 
 
 # read fonts
-for i, font_name in enumerate([name for name in os.listdir(fonts_dir) if name[0] != '.']):
-    # add & output number of fonts
-    fonts_num = i + 1
-    print(str(i), font_name.replace('.ttf', ''))
-    # Read font by using truetype
-    font = ImageFont.truetype(fonts_dir + font_name, 96)
-    for character in characters:
-        # Create a L with alpha img
-        img = Image.new(mode='L', size=(128, 128), color=255)
-        draw = ImageDraw.Draw(img)
-        # Make the font drawn on center
-        text_size = draw.textsize(character, font)
-        text_w = text_size[0]
-        text_h = text_size[1]
-        draw.text((64 - text_w / 2, 64 - text_h / 2),
-                  character, font=font, fill=0)
+def read_fonts(characters):
+    raw_imgs.clear()
+    labels_imgs.clear()
+    for i, font_name in enumerate(fonts_name):
+        # Read font by using truetype
+        font = ImageFont.truetype(fonts_dir + font_name, 96)
+        for character in characters:
+            # Create an img
+            img = Image.new(mode='L', size=(128, 128), color=255)
+            draw = ImageDraw.Draw(img)
+            # Make the font drawn on center
+            text_size = draw.textsize(character, font)
+            text_w = text_size[0]
+            text_h = text_size[1]
+            draw.text((64 - text_w / 2, 64 - text_h / 2),
+                      character, font=font, fill=0)
 
-        raw_imgs.append(list(img.getdata()))
-        labels.append(i)
-print('succeeded: reading fonts')
+            raw_imgs.append(list(img.getdata()))
+            labels.append(i)
 
 
-data_set = list(zip(raw_imgs, labels))
-random.shuffle(data_set)
-raw_imgs[:], labels[:] = zip(*data_set)
-print('succeeded: randomizing data set')
+# randomize dataset
+def randomize_dataset(raw_imgs, labels):
+    data_set = list(zip(raw_imgs, labels))
+    random.shuffle(data_set)
+    raw_imgs[:], labels[:] = zip(*data_set)
+    print('succeeded: randomizing data set')
 
 
 raw_imgs = numpy.array(raw_imgs)
@@ -60,7 +80,7 @@ labels = numpy.array(labels)
 labels = np_utils.to_categorical(labels)
 
 
-#
+# the model
 input = Input(shape=(128, 128, 1), name='input')
 x = Conv2D(input_shape=(128, 128, 1),
            filters=16,
@@ -89,6 +109,7 @@ x = concatenate([avgpool, stdpool])
 x = Dense(units=128,
           kernel_initializer='random_normal')(x)
 x = PReLU()(x)
+x = BatchNormalization()(x)
 output = Dense(units=fonts_num,
                kernel_initializer='random_normal',
                activation='softmax',
@@ -97,6 +118,7 @@ model = Model(inputs=input, outputs=output)
 
 print(model.summary())
 
+# compile model
 model.compile(
     loss='categorical_crossentropy',
     optimizer='adam',
@@ -107,7 +129,7 @@ model.compile(
 history = model.fit(x=raw_imgs,
                     y=labels,
                     validation_split=0.2,
-                    epochs=10,
+                    epochs=1000,
                     batch_size=128,
                     verbose=2)
 

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import pickle
 from PIL import Image
 import numpy
 from keras.models import load_model
@@ -25,5 +26,5 @@ model = load_model('model_data/style_discriminator.h5',
                    {'GlobalStandardPooling2D': GlobalStandardPooling2D})
 
 prediction = model.predict(real_imgs)
-#prediction = numpy.argmax(prediction, axis=1)
+prediction = numpy.argmax(prediction, axis=1)
 print(prediction)
