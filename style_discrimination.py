@@ -25,10 +25,12 @@ BATCH = 256
 # read characters
 characters = open('characters.txt', 'r',
                   encoding='utf-8').read()
+characters = list(characters)
 random.shuffle(characters)
 char_num = len(characters)
 epoch_num = char_num // BATCH + 1
-print('succeeded: reading characters)
+print('succeeded: reading characters')
+print(epoch_num)
 
 
 # read fonts name
@@ -36,7 +38,7 @@ for i, font_name in enumerate([name for name in os.listdir(fonts_dir) if name[0]
     # output number of fonts
     fonts_num = i + 1
     print(str(i), font_name.replace('.ttf', ''))
-    fonts_name.append(font_name.replace('.ttf', ''))
+    fonts_name.append(font_name)
 with open('fonts_name.dat', 'rb+') as f:
     pickle.dump(fonts_name, f)
 print('succeeded: reading fonts name')
@@ -78,6 +80,7 @@ output = Dense(units=fonts_num,
                name='output')(x)
 model = Model(inputs=input, outputs=output)
 
+# print model
 print(model.summary())
 
 # compile model
@@ -89,22 +92,24 @@ model.compile(
 
 
 for epoch in range(epoch_num):
+    #
     raw_imgs = []
     labels = []
-    if epoch = epoch_num:
+    if epoch == epoch_num:
         characters_using = characters
     else:
         characters_using = characters[:BATCH - 1]
         characters = characters[BATCH:]
 
+    #
     for i, font_name in enumerate(fonts_name):
-        # Read font by using truetype
+        # read font by using truetype
         font = ImageFont.truetype(fonts_dir + font_name, 96)
-        for character in characters:
-            # Create an img
+        for character in characters_using:
+            # create an img
             img = Image.new(mode='L', size=(128, 128), color=255)
             draw = ImageDraw.Draw(img)
-            # Make the font drawn on center
+            # make the font drawn on center
             text_size = draw.textsize(character, font)
             text_w = text_size[0]
             text_h = text_size[1]
@@ -114,11 +119,13 @@ for epoch in range(epoch_num):
             raw_imgs.append(list(img.getdata()))
             labels.append(i)
 
-    data_set = list(zip(raw_imgs, labels))
-    random.shuffle(data_set)
-    raw_imgs[:], labels[:] = zip(*data_set)
+    # randomize dataset
+    dataset = list(zip(raw_imgs, labels))
+    random.shuffle(dataset)
+    raw_imgs[:], labels[:] = zip(*dataset)
     print('succeeded: randomizing data set')
 
+    # tranfer the dataset into a numpy array
     raw_imgs = numpy.array(raw_imgs)
     raw_imgs = raw_imgs.reshape(
         raw_imgs.shape[0], 128, 128, 1).astype('float32') / 255
@@ -129,7 +136,7 @@ for epoch in range(epoch_num):
     history = model.fit(x=raw_imgs,
                         y=labels,
                         validation_split=0.2,
-                        epochs=1000,
+                        epochs=100,
                         batch_size=128,
                         verbose=2)
 
