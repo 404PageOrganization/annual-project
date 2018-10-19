@@ -5,7 +5,7 @@ import pickle
 from PIL import Image, ImageDraw, ImageFont
 import random
 import numpy
-from keras.models import Model
+from keras.models import Model, load_model
 from keras.layers import Input, Dense, Dropout, Conv2D, MaxPooling2D, AveragePooling2D, GlobalAveragePooling2D, PReLU, BatchNormalization, concatenate
 from custom_layers import GlobalStandardPooling2D
 from keras.utils import np_utils
@@ -92,6 +92,8 @@ model.compile(
 
 
 for epoch in range(epoch_num):
+    if os.path.exists('model_data/style_discriminator.h5'):
+        model = load_model('model_data/style_discriminator.h5')
     #
     raw_imgs = []
     labels = []
@@ -136,6 +138,7 @@ for epoch in range(epoch_num):
     history = model.fit(x=raw_imgs,
                         y=labels,
                         validation_split=0.2,
+                        initial_epoch=epoch * 100,
                         epochs=100,
                         batch_size=128,
                         verbose=2)
