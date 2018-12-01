@@ -22,18 +22,31 @@ pip install keras tensorflow tensorflow-gpu pillow colorama
 
 如果你的电脑有较新的 NVIDIA 显卡，可以安装 CUDA9.0 与 CUDNN 来使用 GPU 加速。
 
-#### 目录结构
+#### 项目各流程文件
 
+##### 预处理
+
+-   make_dirs.py 创建项目所需要的子目录
 -   characters.txt 存放最常用的3500个汉字
--   custom_layers.py 自定义向量层
+-   list_fonts.py 生成字体引用目录文档
 -   font_reference.md 字体引用目录
--   image_mosaicking.py 在风格迁移网络生成训练结果后，制作一张进度图
--   image_preprocessing.py 进行字体图像的切分
--   list_fonts.py 生成字体引用文档
--   make_all_characters.py 套用 fonts 文件夹下的所有字体，生成所需要的所有原字符
--   make_dirs.py 创建项目所需要的目录
--   real_font_to_png.py 套用 fonts 文件夹下的第一个字体，生成测试用图片
+-   make_all_characters.py 调用 fonts 子目录下的所有字体，在 raw_img 子目录下生成所需要的所有源字符图像
+-   real_font_to_png.py 调用 fonts 文件夹下的第一个字体，在 real_img 子目录下生成所需要的目标字符图像（注：此脚本在测试阶段使用）
+-   image_preprocessing.py 进行字体图像的切分（注：此脚本在应用阶段使用）
+
+##### 网络及其训练
+
+-   fonts_name.dat 以二进制格式存储风格识别网络训练时读入的字体名称
+-   custom_layers.py 自定义向量层
 -   style_discrimination.py 风格识别网络训练
--   style_prediction.py 风格识别网络判别
+-   style_prediction.py 使用风格识别网络预测字体风格
 -   training_generator.py 训练风格迁移网络
 -   transfer_unknow_characters.py 迁移未知字符
+
+##### 后续工作
+
+-   image_mosaicking.py 在风格迁移网络生成训练结果后，制作一张训练进度图
+
+##### 未知文件
+
+-   fonts_sifting.py
