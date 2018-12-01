@@ -39,6 +39,7 @@ pip install keras tensorflow tensorflow-gpu pillow colorama
 
 -   make_dirs.py 创建项目所需要的子目录
 -   characters.txt 存放最常用的3500个汉字
+-   fonts_sifting.py 筛选字符完整的字体
 -   list_fonts.py 生成字体引用目录文档
 -   font_reference.md 字体引用目录
 -   make_all_characters.py 调用 fonts 子目录下的字体，在 raw_img 子目录下生成所需要的源字体图像
@@ -57,7 +58,3 @@ pip install keras tensorflow tensorflow-gpu pillow colorama
 ##### 后续工作
 
 -   image_mosaicking.py 在风格迁移网络生成训练结果后，制作一张训练进度图
-
-##### 未知文件
-
--   fonts_sifting.py
