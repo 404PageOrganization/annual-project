@@ -110,7 +110,7 @@ for character, real_image, raw_image in zip(characters, real_images, raw_images)
 
 # Define the models
 generator = Sequential([
-    Conv2D(input_shape=(128, 128, 2),
+    Conv2D(input_shape=(128, 128, 1),
            filters=8,
            kernel_size=3,
            strides=2,
@@ -159,7 +159,7 @@ generator = Sequential([
     PReLU(),
     UpSampling2D(size=2),
     BatchNormalization(),
-    Conv2D(filters=2,
+    Conv2D(filters=1,
            kernel_size=3,
            # kernel_initializer='uniform',
            kernel_regularizer=l2(l2_rate),
