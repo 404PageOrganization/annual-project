@@ -24,14 +24,14 @@ pip install keras tensorflow tensorflow-gpu pillow colorama
 
 #### 目录结构
 
-- fake_img 存储训练过程中的生成图像
-- fake_img_mosaicking 存储拼合产生的进度图
-- fonts 存储训练所用的源字体文件
-- fonts_reserve 存储所有备用字体文件
-- model_data 存储风格识别网络模型
-- raw_img 存储源字体图像
-- real_img 存储目标字体图像
-- real_img_origin 存储未切分的目标字体图像
+-   fake_img 存储训练过程中的生成图像
+-   fake_img_mosaicking 存储拼合产生的进度图
+-   fonts 存储训练所用的源字体文件
+-   fonts_reserve 存储所有备用字体文件
+-   model_data 存储风格识别网络模型
+-   raw_img 存储源字体图像
+-   real_img 存储目标字体图像
+-   real_img_origin 存储未切分的目标字体图像
 
 #### 项目各流程文件
 
