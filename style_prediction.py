@@ -27,7 +27,7 @@ model = load_model('model_data/style_discriminator.h5',
 
 prediction = model.predict(real_imgs)
 prediction = numpy.argmax(prediction, axis=1)
-prediction = numpy.bitcount(prediction)
+prediction = numpy.bincount(prediction)
 prediction = numpy.argmax(prediction)
 with open('fonts_name.dat', 'rb+') as f:
     fonts_name = pickle.load(f)
