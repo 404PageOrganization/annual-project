@@ -29,5 +29,5 @@ for font_name in [name for name in os.listdir(fonts_dir) if name[0] != '.']:
 
         # Print the name of fonts which is not applicable
         if img.getextrema()[0] == 255:
-            print(font_name)
+            print(font_name + ' ' + output_text)
             break
