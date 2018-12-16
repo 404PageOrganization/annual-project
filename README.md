@@ -42,7 +42,7 @@ pip install keras tensorflow tensorflow-gpu pillow colorama
 -   fonts_sifting.py 筛选字符完整的字体
 -   list_fonts.py 生成字体引用目录文档
 -   font_reference.md 字体引用目录
--   make_all_characters.py 调用 fonts 子目录下的字体，在 raw_img 子目录下生成所需要的源字体图像
+-   raw_font_to_png.py 调用 fonts 子目录下的字体，在 raw_img 子目录下生成所需要的源字体图像
 -   real_font_to_png.py 调用 fonts_reserve 文件夹下的第一个字体，在 real_img 子目录下生成所需要的目标字体图像（注：此脚本在测试阶段使用）
 -   image_preprocessing.py 进行字体图像的切分（注：此脚本在应用阶段使用）
 
