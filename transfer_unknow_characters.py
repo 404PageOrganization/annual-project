@@ -39,71 +39,13 @@ raw_images = raw_images.reshape(
     raw_images.shape[0], 128, 128, 2).astype('float32') / 127.5 - 1
 
 
-# Define the models
-generator = Sequential([
-    Conv2D(input_shape=(128, 128, 2),
-           filters=8,
-           kernel_size=3,
-           strides=2,
-           # kernel_initializer='uniform',
-           kernel_regularizer=l2(l2_rate),
-           padding='same'),
-    PReLU(),
-    BatchNormalization(),
-    Conv2D(filters=32,
-           kernel_size=3,
-           strides=2,
-           # kernel_initializer='uniform',
-           kernel_regularizer=l2(l2_rate),
-           padding='same'),
-    PReLU(),
-    BatchNormalization(),
-    Conv2D(filters=64,
-           kernel_size=5,
-           strides=2,
-           # kernel_initializer='uniform',
-           kernel_regularizer=l2(l2_rate),
-           padding='same'),
-    PReLU(),
-    BatchNormalization(),
-    Conv2D(filters=64,
-           kernel_size=5,
-           # kernel_initializer='uniform',
-           kernel_regularizer=l2(l2_rate),
-           padding='same'),
-    PReLU(),
-    UpSampling2D(size=2),
-    BatchNormalization(),
-    Conv2D(filters=32,
-           kernel_size=3,
-           # kernel_initializer='uniform',
-           kernel_regularizer=l2(l2_rate),
-           padding='same'),
-    PReLU(),
-    UpSampling2D(size=2),
-    BatchNormalization(),
-    Conv2D(filters=8,
-           kernel_size=3,
-           # kernel_initializer='uniform',
-           kernel_regularizer=l2(l2_rate),
-           padding='same'),
-    PReLU(),
-    UpSampling2D(size=2),
-    BatchNormalization(),
-    Conv2D(filters=2,
-           kernel_size=3,
-           # kernel_initializer='uniform',
-           kernel_regularizer=l2(l2_rate),
-           padding='same',
-           activation='tanh'),
-])
+# Load trained models
+generator = load_model(model_data_dir + '/generator.h5')
 
 
 # Print model struct
 print(generator.summary())
 
-# Load trained models
-generator = load_model(model_data_dir + '/generator.h5')
 
 # Compile models
 generator.compile(loss='logcosh',
