@@ -18,10 +18,6 @@ fake_img_dir = 'fake_img'
 model_data_dir = 'model_data'
 
 
-# Define model args
-l2_rate = 0.01
-
-
 # Read raw images & characters
 raw_images = []
 characters = []
@@ -47,16 +43,10 @@ generator = load_model(model_data_dir + '/generator.h5')
 print(generator.summary())
 
 
-# Compile models
-generator.compile(loss='logcosh',
-                  optimizer='RMSProp',
-                  metrics=['acc'])
-
-
 # Predict image
 fake_images = generator.predict(x=raw_images, verbose=1)
 
 for character, fake_image in zip(characters, fake_images):
     save_image = ((fake_image + 1) * 127.5).astype('uint8')
-    Image.fromarray(save_image, mode='LA').save(
+    Image.fromarray(save_image, mode='L').save(
         fake_img_dir + '/' + character + '.png')
