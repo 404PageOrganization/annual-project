@@ -28,7 +28,7 @@ img_new = Image.new(mode='L', size=(
     row_num * 128, 64 + col_num * 128), color=255)
 
 for char in chars:
-    font = ImageFont.truetype('fonts_reserve/于洪亮钢笔楷书.ttf', 32)
+    font = ImageFont.truetype('simhei.ttf', 32)
     draw = ImageDraw.Draw(img_new)
     text_w, text_h = draw.textsize('input', font)
     draw.text((64 - text_w / 2, 32 - text_h / 2),
