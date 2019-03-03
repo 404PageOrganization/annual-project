@@ -1,7 +1,7 @@
 from keras.utils import np_utils
 from keras.regularizers import l2
 from keras.models import Sequential
-from keras.layers import BatchNormalization, Conv2D, UpSampling2D, PReLU
+from keras.layers import BatchNormalization, Conv2D, UpSampling2D, PReLU, Dropout, MaxPooling2D, Activation
 from keras.callbacks import ModelCheckpoint, Callback
 from keras.optimizers import Adam
 from non_local import non_local_block
@@ -87,8 +87,8 @@ batch_characters = characters[:20]
 
 # Save sample images
 for character, real_image, raw_image in zip(batch_characters, batch_real_images, batch_raw_images):
-    real_sample = ((real_image + 1) * 127.5).astype('uint8')
-    raw_sample = ((raw_image + 1) * 127.5).astype('uint8')
+    real_sample = ((real_image + 1) * 127.5).astype('uint8').reshape(128, 128)
+    raw_sample = ((raw_image + 1) * 127.5).astype('uint8').reshape(128, 128)
     Image.fromarray(real_sample, mode='L').save(
         fake_img_dir + '/' + character + 'real_img.png')
     Image.fromarray(raw_sample, mode='L').save(
@@ -138,15 +138,19 @@ generator = Sequential([
            padding='same'),
     PReLU(),
     BatchNormalization(),
-    Conv2D(filters=128,
-           kernel_size=3,
-           padding='same'),
-    PReLU(),
-    BatchNormalization(),
+    #Conv2D(filters=128,
+    #       kernel_size=3,
+    #       padding='same'),
+    #PReLU(),
+    #BatchNormalization(),
     Conv2D(filters=1,
            kernel_size=3,
            padding='same',
-           activation='sigmoid')
+           activation='sigmoid'),
+    MaxPooling2D(pool_size=2),
+    Dropout(0.25),
+    Activation('sigmoid'),
+    UpSampling2D(size=(2, 2)),
 ])
 
 
@@ -167,7 +171,7 @@ class save_fake_img(Callback):
             print('Saving fake images.')
             fake_images = generator.predict(x=batch_raw_images, verbose=1)
             for character, fake_image in zip(batch_characters, fake_images):
-                save_image = ((fake_image + 1) * 127.5).astype('uint8')
+                save_image = ((fake_image + 1) * 127.5).astype('uint8').reshape(128, 128)
                 Image.fromarray(save_image, mode='L').save(
                     fake_img_dir + '/' + character + str(epoch) + '.png')
 
