@@ -138,15 +138,16 @@ generator = Sequential([
            padding='same'),
     PReLU(),
     BatchNormalization(),
-    #Conv2D(filters=128,
+    # Conv2D(filters=128,
     #       kernel_size=3,
     #       padding='same'),
-    #PReLU(),
-    #BatchNormalization(),
+    # PReLU(),
+    # BatchNormalization(),
     Conv2D(filters=1,
            kernel_size=3,
-           padding='same',
-           activation='sigmoid'),
+           padding='same'),
+    PReLU(),
+    BatchNormalization(),
     MaxPooling2D(pool_size=2),
     Dropout(0.25),
     Activation('sigmoid'),
@@ -171,9 +172,11 @@ class save_fake_img(Callback):
             print('Saving fake images.')
             fake_images = generator.predict(x=batch_raw_images, verbose=1)
             for character, fake_image in zip(batch_characters, fake_images):
-                save_image = ((fake_image + 1) * 127.5).astype('uint8').reshape(128, 128)
+                save_image = ((fake_image + 1) *
+                              127.5).astype('uint8').reshape(128, 128)
                 Image.fromarray(save_image, mode='L').save(
                     fake_img_dir + '/' + character + str(epoch) + '.png')
+
 
 checkpoint = ModelCheckpoint(model_data_dir, save_best_only=True)
 save_img = save_fake_img()
