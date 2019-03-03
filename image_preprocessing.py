@@ -68,8 +68,6 @@ def crop_blank(img):
                 if y_max < y:
                     y_max = y
     img = img.crop([x_min, y_min, x_max, y_max])
-    a = ImageChops.invert(img)
-    img = Image.merge('LA', (img, a))
     resize_img(img)
 
 
@@ -86,7 +84,7 @@ def resize_img(img):
         w1 = 80
         h1 = int(h * 80 / w)
     img = img.resize((w1, h1), Image.ANTIALIAS)
-    img_new = Image.new(mode='LA', size=(128, 128), color=(255, 0))
+    img_new = Image.new(mode='L', size=(128, 128), color=255)
     img_new.paste(img, (int(64 - w1 / 2), int(64 - h1 / 2) + 12))
     img_new.save(out_dir + str(count) + ".png", 'png')
 
