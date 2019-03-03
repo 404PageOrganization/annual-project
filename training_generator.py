@@ -4,6 +4,7 @@ from keras.models import Sequential
 from keras.layers import BatchNormalization, Conv2D, UpSampling2D, PReLU
 from keras.callbacks import ModelCheckpoint, Callback
 from keras.optimizers import Adam
+from non_local import non_local_block
 from PIL import Image, ImageDraw, ImageFont
 import os
 import numpy
@@ -55,7 +56,7 @@ font = ImageFont.truetype(fonts_dir + '/' + font_name, 96)
 for character in characters:
 
     # Create a L with alpha img
-    img = Image.new(mode='LA', size=(128, 128), color=(255, 0))
+    img = Image.new(mode='L', size=(128, 128), color=255)
 
     draw = ImageDraw.Draw(img)
 
@@ -64,7 +65,7 @@ for character in characters:
     text_w = text_size[0]
     text_h = text_size[1]
     draw.text((64 - text_w / 2, 64 - text_h / 2),
-              character, font=font, fill=(0, 255))
+              character, font=font, fill=0)
 
     raw_images.append(list(img.getdata()))
 
@@ -72,10 +73,10 @@ for character in characters:
 # Process image
 raw_images = numpy.array(raw_images)
 raw_images = raw_images.reshape(
-    raw_images.shape[0], 128, 128, 2).astype('float32') / 127.5 - 1
+    raw_images.shape[0], 128, 128, 1).astype('float32') / 127.5 - 1
 real_images = numpy.array(real_images)
 real_images = real_images.reshape(
-    real_images.shape[0], 128, 128, 2).astype('float32') / 127.5 - 1
+    real_images.shape[0], 128, 128, 1).astype('float32') / 127.5 - 1
 
 
 # Use only 20 of characters to save
@@ -83,66 +84,69 @@ batch_raw_images = raw_images[:20]
 batch_real_images = real_images[:20]
 batch_characters = characters[:20]
 
+
 # Save sample images
 for character, real_image, raw_image in zip(batch_characters, batch_real_images, batch_raw_images):
     real_sample = ((real_image + 1) * 127.5).astype('uint8')
     raw_sample = ((raw_image + 1) * 127.5).astype('uint8')
-    Image.fromarray(real_sample, mode='LA').save(
+    Image.fromarray(real_sample, mode='L').save(
         fake_img_dir + '/' + character + 'real_img.png')
-    Image.fromarray(raw_sample, mode='LA').save(
+    Image.fromarray(raw_sample, mode='L').save(
         fake_img_dir + '/' + character + 'raw_img.png')
 
 
 # Define the models
 generator = Sequential([
-    Conv2D(input_shape=(128, 128, 2),
+    Conv2D(input_shape=(128, 128, 1),
            filters=8,
-           kernel_size=3,
-           strides=2,
-           kernel_regularizer=l2(l2_rate),
+           kernel_size=64,
            padding='same'),
     PReLU(),
-    BatchNormalization(),
-    Conv2D(filters=16,
-           kernel_size=3,
-           strides=2,
-           kernel_regularizer=l2(l2_rate),
-           padding='same'),
-    PReLU(),
-    BatchNormalization(),
-    Conv2D(filters=32,
-           kernel_size=5,
-           strides=2,
-           kernel_regularizer=l2(l2_rate),
-           padding='same'),
-    PReLU(),
-    BatchNormalization(),
-    Conv2D(filters=32,
-           kernel_size=5,
-           kernel_regularizer=l2(l2_rate),
-           padding='same'),
-    PReLU(),
-    UpSampling2D(size=2),
-    BatchNormalization(),
-    Conv2D(filters=16,
-           kernel_size=3,
-           kernel_regularizer=l2(l2_rate),
-           padding='same'),
-    PReLU(),
-    UpSampling2D(size=2),
     BatchNormalization(),
     Conv2D(filters=8,
-           kernel_size=3,
-           kernel_regularizer=l2(l2_rate),
+           kernel_size=64,
            padding='same'),
     PReLU(),
-    UpSampling2D(size=2),
     BatchNormalization(),
-    Conv2D(filters=2,
+    Conv2D(filters=32,
+           kernel_size=32,
+           padding='same'),
+    PReLU(),
+    BatchNormalization(),
+    Conv2D(filters=32,
+           kernel_size=32,
+           padding='same'),
+    PReLU(),
+    BatchNormalization(),
+    Conv2D(filters=64,
+           kernel_size=16,
+           padding='same'),
+    PReLU(),
+    BatchNormalization(),
+    Conv2D(filters=64,
+           kernel_size=16,
+           padding='same'),
+    PReLU(),
+    BatchNormalization(),
+    Conv2D(filters=128,
+           kernel_size=7,
+           padding='same'),
+    PReLU(),
+    BatchNormalization(),
+    Conv2D(filters=128,
+           kernel_size=7,
+           padding='same'),
+    PReLU(),
+    BatchNormalization(),
+    Conv2D(filters=128,
            kernel_size=3,
-           kernel_regularizer=l2(l2_rate),
+           padding='same'),
+    PReLU(),
+    BatchNormalization(),
+    Conv2D(filters=1,
+           kernel_size=3,
            padding='same',
-           activation='tanh'),
+           activation='sigmoid')
 ])
 
 
@@ -151,15 +155,12 @@ print(generator.summary())
 
 
 # Compile models
-generator.compile(loss='logcosh',
+generator.compile(loss='mean_squared_error',
                   optimizer=Adam(lr=learning_rate),
                   metrics=['acc'])
 
 
 # Set callbacks
-checkpoint = ModelCheckpoint(model_data_dir, save_best_only=True)
-
-
 class save_fake_img(Callback):
     def on_epoch_end(self, epoch, logs={}):
         if(epoch % save_image_rate == 0):
@@ -167,10 +168,10 @@ class save_fake_img(Callback):
             fake_images = generator.predict(x=batch_raw_images, verbose=1)
             for character, fake_image in zip(batch_characters, fake_images):
                 save_image = ((fake_image + 1) * 127.5).astype('uint8')
-                Image.fromarray(save_image, mode='LA').save(
+                Image.fromarray(save_image, mode='L').save(
                     fake_img_dir + '/' + character + str(epoch) + '.png')
 
-
+checkpoint = ModelCheckpoint(model_data_dir, save_best_only=True)
 save_img = save_fake_img()
 
 
