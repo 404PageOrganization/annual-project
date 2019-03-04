@@ -33,9 +33,9 @@ target_images = []
 characters = []
 
 for target_img_file in [name for name in os.listdir(target_img_dir) if name[0] != '.']:
-    for file_name in [name for name in os.listdir(target_img_dir + '/' + target_img_file) if name[0] != '.']:
-        target_images.append(list(Image.open(target_img_dir + '/' +
-                                             target_img_file + '/' + file_name).getdata()))
+    for file_name in [name for name in os.listdir('{}/{}'.format(target_img_dir, target_img_file)) if name[0] != '.']:
+        target_images.append(list(Image.open('{}/{}/{}'.format(target_img_dir,
+                                                               target_img_file, file_name)).getdata()))
         characters.append(target_img_file)
 
 
@@ -49,7 +49,7 @@ font_list = [name for name in os.listdir(fonts_dir) if name[0] != '.']
 font_name = font_list[0]
 
 # Read font by using truetype
-font = ImageFont.truetype(fonts_dir + '/' + font_name, 96)
+font = ImageFont.truetype('{}/{}'.format(fonts_dir, font_name), 96)
 
 # Traverse all characters
 for character in characters:
@@ -90,9 +90,9 @@ for character, target_image, raw_image in zip(batch_characters, batch_target_ima
                      127.5).astype('uint8').reshape(128, 128)
     raw_sample = ((raw_image + 1) * 127.5).astype('uint8').reshape(128, 128)
     Image.fromarray(target_sample, mode='L').save(
-        fake_img_dir + '/' + character + 'target_img.png')
+        '{}/{}target_img.png'.format(fake_img_dir, character))
     Image.fromarray(raw_sample, mode='L').save(
-        fake_img_dir + '/' + character + 'raw_img.png')
+        '{}/{}raw_img.png'.format(fake_img_dir, character))
 
 
 # Define the models
@@ -101,7 +101,7 @@ x = Conv2D(input_shape=(128, 128, 1),
            filters=8,
            kernel_size=64,
            padding='same')(input)
-#x = non_local_block(x, compression=2, mode='embedded')
+# x = non_local_block(x, compression=2, mode='embedded')
 x = PReLU()(x)
 x = BatchNormalization()(x)
 x = Conv2D(filters=8,
@@ -176,7 +176,7 @@ class save_fake_img(Callback):
                 save_image = ((fake_image + 1) *
                               127.5).astype('uint8').reshape(128, 128)
                 Image.fromarray(save_image, mode='L').save(
-                    fake_img_dir + '/' + character + str(epoch + 1) + '.png')
+                    '{}/{}{}.png'.format(fake_img_dir, character, epoch + 1))
 
 
 checkpoint = ModelCheckpoint(
