@@ -6,8 +6,8 @@ import numpy as np
 import cv2
 
 
-in_dir = "real_img_origin/"
-out_dir = "real_img/"
+in_dir = "target_img_origin/"
+out_dir = "target_img/"
 val_min = 10    # the threshold value
 range_min = 60    # the minimum size of a character
 count = 0    # the serial number

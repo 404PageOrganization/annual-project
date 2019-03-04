@@ -7,7 +7,7 @@ import os
 
 # Define the abspath
 fonts_dir = 'fonts'
-real_img_dir = 'real_img'
+target_img_dir = 'target_img'
 
 # Read test chinese characters
 characters = open('test.txt', 'r',
@@ -15,7 +15,7 @@ characters = open('test.txt', 'r',
 
 # Make all directories
 for output_text in characters:
-    dir = real_img_dir + '/' + output_text
+    dir = target_img_dir + '/' + output_text
     if not os.path.exists(dir):
         os.mkdir(dir)
 
@@ -25,7 +25,7 @@ characters = open('test.txt', 'r', encoding='utf-8').read().replace('\n', '')
 # One item in list is a file named ".DS_Store", not a font file, so ignore it
 font_list = [name for name in os.listdir(fonts_dir) if name[0] != '.']
 
-# Use 1 font to generate real img
+# Use 1 font to generate target img
 font_name = font_list[0]
 
 # Read font by using truetype
@@ -47,5 +47,5 @@ for output_text in characters:
               output_text, font=font, fill=0)
 
     # Save the image
-    img.save(real_img_dir + '/' + output_text + '/' +
+    img.save(target_img_dir + '/' + output_text + '/' +
              font_name.replace('.ttf', '.png').replace('.ttc', '.png'), "PNG")

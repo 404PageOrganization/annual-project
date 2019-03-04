@@ -16,8 +16,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 # Define abspaths
 fonts_dir = 'fonts'
-raw_img_dir = 'raw_img'
-real_img_dir = 'real_img'
+target_img_dir = 'target_img'
 fake_img_dir = 'fake_img'
 model_data_dir = 'model_data/generator.h5'
 
@@ -29,15 +28,15 @@ learning_rate = 0.05
 l2_rate = 0.01
 
 
-# Read real images & characters
-real_images = []
+# Read target images & characters
+target_images = []
 characters = []
 
-for real_img_file in [name for name in os.listdir(real_img_dir) if name[0] != '.']:
-    for file_name in [name for name in os.listdir(real_img_dir + '/' + real_img_file) if name[0] != '.']:
-        real_images.append(list(Image.open(real_img_dir + '/' +
-                                           real_img_file + '/' + file_name).getdata()))
-        characters.append(real_img_file)
+for target_img_file in [name for name in os.listdir(target_img_dir) if name[0] != '.']:
+    for file_name in [name for name in os.listdir(target_img_dir + '/' + target_img_file) if name[0] != '.']:
+        target_images.append(list(Image.open(target_img_dir + '/' +
+                                             target_img_file + '/' + file_name).getdata()))
+        characters.append(target_img_file)
 
 
 # Make raw images & characters
@@ -46,7 +45,7 @@ raw_images = []
 # One item in list is a file named ".DS_Store", not a font file, so ignore it
 font_list = [name for name in os.listdir(fonts_dir) if name[0] != '.']
 
-# Use 1 font to generate real img
+# Use 1 font to generate target img
 font_name = font_list[0]
 
 # Read font by using truetype
@@ -74,23 +73,24 @@ for character in characters:
 raw_images = numpy.array(raw_images)
 raw_images = raw_images.reshape(
     raw_images.shape[0], 128, 128, 1).astype('float32') / 127.5 - 1
-real_images = numpy.array(real_images)
-real_images = real_images.reshape(
-    real_images.shape[0], 128, 128, 1).astype('float32') / 127.5 - 1
+target_images = numpy.array(target_images)
+target_images = target_images.reshape(
+    target_images.shape[0], 128, 128, 1).astype('float32') / 127.5 - 1
 
 
 # Use only 20 of characters to save
 batch_raw_images = raw_images[:20]
-batch_real_images = real_images[:20]
+batch_target_images = target_images[:20]
 batch_characters = characters[:20]
 
 
 # Save sample images
-for character, real_image, raw_image in zip(batch_characters, batch_real_images, batch_raw_images):
-    real_sample = ((real_image + 1) * 127.5).astype('uint8').reshape(128, 128)
+for character, target_image, raw_image in zip(batch_characters, batch_target_images, batch_raw_images):
+    target_sample = ((target_image + 1) *
+                     127.5).astype('uint8').reshape(128, 128)
     raw_sample = ((raw_image + 1) * 127.5).astype('uint8').reshape(128, 128)
-    Image.fromarray(real_sample, mode='L').save(
-        fake_img_dir + '/' + character + 'real_img.png')
+    Image.fromarray(target_sample, mode='L').save(
+        fake_img_dir + '/' + character + 'target_img.png')
     Image.fromarray(raw_sample, mode='L').save(
         fake_img_dir + '/' + character + 'raw_img.png')
 
@@ -147,7 +147,6 @@ x = BatchNormalization()(x)
 x = Dropout(0.3)(x)
 output = Activation('tanh', name='output')(x)
 generator = Model(inputs=input, outputs=output)
-generator.
 
 # Print model struct
 print(generator.summary())
@@ -172,13 +171,14 @@ class save_fake_img(Callback):
                     fake_img_dir + '/' + character + str(epoch + 1) + '.png')
 
 
-checkpoint = ModelCheckpoint(model_data_dir, monitor='val_acc', save_best_only=True)
+checkpoint = ModelCheckpoint(
+    model_data_dir, monitor='val_acc', save_best_only=True)
 save_img = save_fake_img()
 
 
 # Training generator
 generator.fit(x=raw_images,
-              y=real_images,
+              y=target_images,
               epochs=epochs_for_generator,
               verbose=2,
               callbacks=[checkpoint, save_img],

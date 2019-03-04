@@ -39,7 +39,7 @@ for char in chars:
 
     img = Image.open(in_dir + '/' + char + 'raw_img.png')
     img_new.paste(img, (0, 64 + i * 128))
-    img = Image.open(in_dir + '/' + char + 'real_img.png')
+    img = Image.open(in_dir + '/' + char + 'target_img.png')
     img_new.paste(img, ((row_num - 1) * 128, 64 + i * 128))
     for j in range(row_num - 2):
         count = j + 1

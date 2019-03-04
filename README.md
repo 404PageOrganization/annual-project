@@ -29,9 +29,8 @@ pip install keras tensorflow tensorflow-gpu pillow colorama
 -   fonts 存储训练所用的源字体文件
 -   fonts_reserve 存储所有备用字体文件
 -   model_data 存储风格识别网络模型
--   raw_img 存储源字体图像
--   real_img 存储目标字体图像
--   real_img_origin 存储未切分的目标字体图像
+-   target_img 存储目标字体图像
+-   target_img_origin 存储未切分的目标字体图像
 
 #### 项目各流程文件
 
@@ -43,7 +42,7 @@ pip install keras tensorflow tensorflow-gpu pillow colorama
 -   list_fonts.py 生成字体引用目录文档
 -   font_reference.md 字体引用目录
 -   raw_font_to_png.py 调用 fonts 子目录下的字体，在 raw_img 子目录下生成所需要的源字体图像
--   real_font_to_png.py 调用 fonts_reserve 文件夹下的第一个字体，在 real_img 子目录下生成所需要的目标字体图像（注：此脚本在测试阶段使用）
+-   target_font_to_png.py 调用 fonts_reserve 文件夹下的第一个字体，在 target_img 子目录下生成所需要的目标字体图像（注：此脚本在测试阶段使用）
 -   image_preprocessing.py 进行字体图像的切分（注：此脚本在应用阶段使用）
 
 ##### 网络及其训练
