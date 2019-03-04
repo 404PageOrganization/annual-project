@@ -144,7 +144,12 @@ x = Conv2D(filters=1,
            padding='same')(x)
 x = PReLU()(x)
 x = BatchNormalization()(x)
+x = MaxPooling2D(pool_size=2)(x)
 x = Dropout(0.3)(x)
+x = UpSampling2D(size=(2, 2))(x)
+x = Conv2D(filters=1,
+           kernel_size=3,
+           padding='same')(x)
 output = Activation('tanh', name='output')(x)
 generator = Model(inputs=input, outputs=output)
 
