@@ -32,7 +32,7 @@ for raw_img_file in [name for name in os.listdir(raw_img_dir) if name[0] != '.']
 # Process img
 raw_images = numpy.array(raw_images)
 raw_images = raw_images.reshape(
-    raw_images.shape[0], 128, 128, 2).astype('float32') / 127.5 - 1
+    raw_images.shape[0], 128, 128, 1).astype('float32') / 127.5 - 1
 
 
 # Load trained models
@@ -47,6 +47,6 @@ print(generator.summary())
 fake_images = generator.predict(x=raw_images, verbose=1)
 
 for character, fake_image in zip(characters, fake_images):
-    save_image = ((fake_image + 1) * 127.5).astype('uint8')
+    save_image = ((fake_image + 1) * 127.5).astype('uint8').reshape(128, 128)
     Image.fromarray(save_image, mode='L').save(
         fake_img_dir + '/' + character + '.png')

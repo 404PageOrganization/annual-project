@@ -1,7 +1,7 @@
 from keras.utils import np_utils
 from keras.regularizers import l2
-from keras.models import Sequential
-from keras.layers import BatchNormalization, Conv2D, UpSampling2D, PReLU, Dropout, MaxPooling2D, Activation
+from keras.models import Model
+from keras.layers import Input, BatchNormalization, Conv2D, UpSampling2D, PReLU, Dropout, MaxPooling2D, Activation
 from keras.callbacks import ModelCheckpoint, Callback
 from keras.optimizers import Adam
 from non_local import non_local_block
@@ -19,12 +19,12 @@ fonts_dir = 'fonts'
 raw_img_dir = 'raw_img'
 real_img_dir = 'real_img'
 fake_img_dir = 'fake_img'
-model_data_dir = 'model_data/model.h5'
+model_data_dir = 'model_data/generator.h5'
 
 
 # Define hyperparameters
 epochs_for_generator = 200
-save_image_rate = 1
+save_image_rate = 10
 learning_rate = 0.05
 l2_rate = 0.01
 
@@ -96,64 +96,58 @@ for character, real_image, raw_image in zip(batch_characters, batch_real_images,
 
 
 # Define the models
-generator = Sequential([
-    Conv2D(input_shape=(128, 128, 1),
+input = Input(shape=(128, 128, 1), name='input')
+x = Conv2D(input_shape=(128, 128, 1),
            filters=8,
            kernel_size=64,
-           padding='same'),
-    PReLU(),
-    BatchNormalization(),
-    Conv2D(filters=8,
+           padding='same')(input)
+#x = non_local_block(x, compression=2, mode='embedded')
+x = PReLU()(x)
+x = BatchNormalization()(x)
+x = Conv2D(filters=8,
            kernel_size=64,
-           padding='same'),
-    PReLU(),
-    BatchNormalization(),
-    Conv2D(filters=32,
+           padding='same')(x)
+x = PReLU()(x)
+x = BatchNormalization()(x)
+x = Conv2D(filters=32,
            kernel_size=32,
-           padding='same'),
-    PReLU(),
-    BatchNormalization(),
-    Conv2D(filters=32,
+           padding='same')(x)
+x = PReLU()(x)
+x = BatchNormalization()(x)
+x = Conv2D(filters=32,
            kernel_size=32,
-           padding='same'),
-    PReLU(),
-    BatchNormalization(),
-    Conv2D(filters=64,
+           padding='same')(x)
+x = PReLU()(x)
+x = BatchNormalization()(x)
+x = Conv2D(filters=64,
            kernel_size=16,
-           padding='same'),
-    PReLU(),
-    BatchNormalization(),
-    Conv2D(filters=64,
+           padding='same')(x)
+x = PReLU()(x)
+x = BatchNormalization()(x)
+x = Conv2D(filters=64,
            kernel_size=16,
-           padding='same'),
-    PReLU(),
-    BatchNormalization(),
-    Conv2D(filters=128,
+           padding='same')(x)
+x = PReLU()(x)
+x = BatchNormalization()(x)
+x = Conv2D(filters=128,
            kernel_size=7,
-           padding='same'),
-    PReLU(),
-    BatchNormalization(),
-    Conv2D(filters=128,
+           padding='same')(x)
+x = PReLU()(x)
+x = BatchNormalization()(x)
+x = Conv2D(filters=128,
            kernel_size=7,
-           padding='same'),
-    PReLU(),
-    BatchNormalization(),
-    # Conv2D(filters=128,
-    #       kernel_size=3,
-    #       padding='same'),
-    # PReLU(),
-    # BatchNormalization(),
-    Conv2D(filters=1,
+           padding='same')(x)
+x = PReLU()(x)
+x = BatchNormalization()(x)
+x = Conv2D(filters=1,
            kernel_size=3,
-           padding='same'),
-    PReLU(),
-    BatchNormalization(),
-    MaxPooling2D(pool_size=2),
-    Dropout(0.25),
-    Activation('sigmoid'),
-    UpSampling2D(size=(2, 2)),
-])
-
+           padding='same')(x)
+x = PReLU()(x)
+x = BatchNormalization()(x)
+x = Dropout(0.3)(x)
+output = Activation('tanh', name='output')(x)
+generator = Model(inputs=input, outputs=output)
+generator.
 
 # Print model struct
 print(generator.summary())
@@ -168,17 +162,17 @@ generator.compile(loss='mean_squared_error',
 # Set callbacks
 class save_fake_img(Callback):
     def on_epoch_end(self, epoch, logs={}):
-        if(epoch % save_image_rate == 0):
+        if((epoch + 1) % save_image_rate == 0):
             print('Saving fake images.')
             fake_images = generator.predict(x=batch_raw_images, verbose=1)
             for character, fake_image in zip(batch_characters, fake_images):
                 save_image = ((fake_image + 1) *
                               127.5).astype('uint8').reshape(128, 128)
                 Image.fromarray(save_image, mode='L').save(
-                    fake_img_dir + '/' + character + str(epoch) + '.png')
+                    fake_img_dir + '/' + character + str(epoch + 1) + '.png')
 
 
-checkpoint = ModelCheckpoint(model_data_dir, save_best_only=True)
+checkpoint = ModelCheckpoint(model_data_dir, monitor='val_acc', save_best_only=True)
 save_img = save_fake_img()
 
 
