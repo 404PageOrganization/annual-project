@@ -2,7 +2,7 @@
 
 import os
 
-dirs = ['fonts', 'fonts_reserve', 'raw_img', 'target_img_origin',
+dirs = ['raw_fonts', 'target_fonts', 'fonts_reserve', 'target_img_origin',
         'target_img', 'fake_img', 'fake_img_mosaicking', 'model_data']
 
 for dir in dirs:
