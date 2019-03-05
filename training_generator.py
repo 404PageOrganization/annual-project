@@ -24,6 +24,7 @@ model_data_dir = 'model_data/generator.h5'
 # Define hyperparameters
 epochs_for_generator = 200
 save_image_rate = 10
+save_model_rate = 50
 learning_rate = 0.05
 l2_rate = 0.01
 
@@ -164,9 +165,10 @@ generator.compile(loss='mean_squared_error',
 
 
 # Set callbacks
-class save_fake_img(Callback):
+class auto_save(Callback):
     def on_epoch_end(self, epoch, logs={}):
-        if((epoch + 1) % save_image_rate == 0):
+        # Save image
+        if (epoch + 1) % save_image_rate == 0:
             print('Saving fake images.')
             fake_images = generator.predict(x=batch_raw_images, verbose=1)
             for character, fake_image in zip(batch_characters, fake_images):
@@ -175,10 +177,13 @@ class save_fake_img(Callback):
                 Image.fromarray(save_image, mode='L').save(
                     '{}/{}{}.png'.format(fake_img_dir, character, epoch + 1))
 
+        # Save model
+        if (epoch + 1) % save_model_rate == 0:
+            generator.save(model_data_dir)
+            print('Successfully save!')
 
-checkpoint = ModelCheckpoint(
-    model_data_dir, monitor='val_acc', save_best_only=True)
-save_img = save_fake_img()
+
+save = auto_save()
 
 
 # Training generator
@@ -186,5 +191,5 @@ generator.fit(x=raw_images,
               y=target_images,
               epochs=epochs_for_generator,
               verbose=2,
-              callbacks=[checkpoint, save_img],
+              callbacks=[save],
               validation_split=0.2)
