@@ -5,7 +5,7 @@ import os
 
 # Define the abspath
 fonts_dir = 'fonts'
-raw_img_dir = 'raw_img'
+img_dir = 'target_img'
 
 # Read 3500 most used chinese characters
 characters = open('characters.txt', 'r',
@@ -13,7 +13,7 @@ characters = open('characters.txt', 'r',
 
 # Make all directories
 for output_text in characters:
-    dir = raw_img_dir + '/' + output_text
+    dir = '{}/{}'.format(img_dir, output_text)
     if not os.path.exists(dir):
         os.mkdir(dir)
 
@@ -22,7 +22,7 @@ for output_text in characters:
 for font_name in [name for name in os.listdir(fonts_dir) if name[0] != '.']:
 
     # Read font by using truetype
-    font = ImageFont.truetype(fonts_dir + '/' + font_name, 96)
+    font = ImageFont.truetype('{}/{}'.format(fonts_dir, font_name), 96)
 
     # Traverse all characters
     for output_text in characters:
@@ -40,5 +40,5 @@ for font_name in [name for name in os.listdir(fonts_dir) if name[0] != '.']:
                   output_text, font=font, fill=0)
 
         # Save the image
-        img.save(raw_img_dir + '/' + output_text + '/' +
-                 font_name.replace('.ttf', '.png').replace('.ttc', '.png'), "PNG")
+        img.save('{}/{}/{}'.format(img_dir, output_text,
+                                   font_name.replace('.ttf', '.png').replace('.ttc', '.png'), "PNG"))
