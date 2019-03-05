@@ -2,7 +2,7 @@
 
 ### 识别用户的手写字体风格，并进行风格迁移
 
-使用纯 CNN 网络来完成风格迁移
+使用生成网络来完成字体风格迁移（注：本项目仍处于测试阶段，模型结构还有待调整）
 
 #### 需要的环境
 
@@ -26,9 +26,10 @@ pip install keras tensorflow tensorflow-gpu pillow colorama
 
 -   fake_img 存储训练过程中的生成图像
 -   fake_img_mosaicking 存储拼合产生的进度图
--   fonts 存储训练所用的源字体文件
 -   fonts_reserve 存储所有备用字体文件
 -   model_data 存储风格识别网络模型
+-   raw_fonts 存储训练所用的源字体文件
+-   target_fonts 存储目标字体
 -   target_img 存储目标字体图像
 -   target_img_origin 存储未切分的目标字体图像
 
@@ -39,10 +40,10 @@ pip install keras tensorflow tensorflow-gpu pillow colorama
 -   make_dirs.py 创建项目所需要的子目录
 -   characters.txt 存放最常用的3500个汉字
 -   fonts_sifting.py 筛选字符完整的字体
--   list_fonts.py 生成字体引用目录文档
--   font_reference.md 字体引用目录
--   raw_font_to_png.py 调用 fonts 子目录下的字体，在 raw_img 子目录下生成所需要的源字体图像
--   target_font_to_png.py 调用 fonts_reserve 文件夹下的第一个字体，在 target_img 子目录下生成所需要的目标字体图像（注：此脚本在测试阶段使用）
+-   list_fonts.py 生成字体引用文档
+-   font_reference.md 字体引用文档
+-   raw_font_to_png.py 调用 raw_fonts 目录下的字体，在 raw_img 子目录下生成所需要的源字体图像
+-   target_font_to_png.py 调用 target_fonts 文件夹下的第一个字体，在 target_img 子目录下生成所需要的目标字体图像（注：此脚本在测试阶段使用）
 -   image_preprocessing.py 进行字体图像的切分（注：此脚本在应用阶段使用）
 
 ##### 网络及其训练
