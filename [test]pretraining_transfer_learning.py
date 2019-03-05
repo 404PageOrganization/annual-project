@@ -15,9 +15,9 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 
 # Define abspaths
-fonts_dir = 'fonts'
-target_img_dir = 'target_img'
-fake_img_dir = 'fake_img'
+fonts_dir = 'pretraining_fonts'
+target_img_dir = 'pretraining_target_img'
+fake_img_dir = 'pretraining_fake_img'
 model_data_dir = 'model_data/pretraining.h5'
 
 
@@ -154,7 +154,6 @@ generator_top = Model(inputs=input, outputs=temp)
 generator_rear = Model(inputs=temp, outputs=output)
 
 generator = Sequential([generator_top, generator_rear])
-generator_top.trainable = False
 
 # Print model struct
 print(generator.summary())
@@ -177,12 +176,12 @@ class auto_save(Callback):
                 save_image = ((fake_image + 1) *
                               127.5).astype('uint8').reshape(128, 128)
                 Image.fromarray(save_image, mode='L').save(
-                    '{}/{}{}.png'.format(fake_img_dir, character, epoch + 1))
+                    '{}/pre{}{}.png'.format(fake_img_dir, character, epoch + 1))
 
         # Save model
         if (epoch + 1) % save_model_rate == 0:
             print('Saving model...')
-            generator.save(model_data_dir)
+            generator.save_weights(model_data_dir)
             print('Saving model succeeded.')
 
 
