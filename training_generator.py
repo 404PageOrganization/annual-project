@@ -167,9 +167,9 @@ generator.compile(loss='mean_squared_error',
 # Set callbacks
 class auto_save(Callback):
     def on_epoch_end(self, epoch, logs={}):
-        # Save image
+        # Save images
         if (epoch + 1) % save_image_rate == 0:
-            print('Saving fake images.')
+            print('Saving fake images...')
             fake_images = generator.predict(x=batch_raw_images, verbose=1)
             for character, fake_image in zip(batch_characters, fake_images):
                 save_image = ((fake_image + 1) *
@@ -179,8 +179,9 @@ class auto_save(Callback):
 
         # Save model
         if (epoch + 1) % save_model_rate == 0:
+            print('Saving model...')
             generator.save(model_data_dir)
-            print('Successfully save!')
+            print('Saving model succeeded.')
 
 
 save = auto_save()
