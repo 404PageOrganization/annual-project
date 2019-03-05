@@ -1,10 +1,11 @@
-/fonts
-/pretraining_fonts
-/fonts_reserve
-/target_img_origin
-/target_img
 /fake_img
 /fake_img_mosaicking
+/raw_fonts
+/pretraining_fonts
+/fonts_reserve
+/target_fonts
+/target_img
+/target_img_origin
 /model_data
 /pretraining_target_img
 /pretraining_fake_img

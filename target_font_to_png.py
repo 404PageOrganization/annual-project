@@ -4,7 +4,7 @@ from PIL import Image, ImageDraw, ImageFont
 import os
 
 # Define the abspath
-fonts_dir = 'fonts'
+fonts_dir = 'target_fonts'
 img_dir = 'target_img'
 
 # Read 3500 most used chinese characters
