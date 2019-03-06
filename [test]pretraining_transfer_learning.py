@@ -15,7 +15,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 
 # Define abspaths
-fonts_dir = 'pretraining_fonts'
+fonts_dir = 'raw_fonts'
 target_img_dir = 'pretraining_target_img'
 fake_img_dir = 'pretraining_fake_img'
 model_data_dir = 'model_data/pretraining.h5'
