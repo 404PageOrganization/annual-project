@@ -49,21 +49,32 @@ font_name = font_list[0]
 # Read font by using truetype
 font = ImageFont.truetype('{}/{}'.format(fonts_dir, font_name), 96)
 
-
-# Process image
-raw_images = numpy.array(raw_images)
-raw_images = raw_images.reshape(
-    raw_images.shape[0], 128, 128, 1).astype('float32') / 127.5 - 1
-target_images = numpy.array(target_images)
-target_images = target_images.reshape(
-    target_images.shape[0], 128, 128, 1).astype('float32') / 127.5 - 1
-
-
 # Use only 20 of characters to save
-batch_raw_images = raw_images[:20]
+batch_raw_images = []
 batch_target_images = target_images[:20]
 batch_characters = characters[:20]
 
+# Traverse batch characters
+for character in batch_characters:
+
+    # Create a grayscale img
+    img = Image.new(mode='L', size=(128, 128), color=255)
+
+    draw = ImageDraw.Draw(img)
+
+    # Make the font drawn on center
+    text_size = draw.textsize(character, font)
+    text_w = text_size[0]
+    text_h = text_size[1]
+    draw.text((64 - text_w / 2, 64 - text_h / 2),
+              character, font=font, fill=0)
+
+    batch_raw_images.append(list(img.getdata()))
+
+# Process image
+batch_raw_images = numpy.array(batch_raw_images)
+batch_raw_images = batch_raw_images.reshape(
+    batch_raw_images.shape[0], 128, 128, 1).astype('float32') / 127.5 - 1
 
 # Save sample images
 for character, target_image, raw_image in zip(batch_characters, batch_target_images, batch_raw_images):
@@ -190,13 +201,16 @@ def generate_training_data(font, characters, target_images, batch_size):
 
             if ans == batch_size:
                 ans = 0
-                yield (np.array(X), np.array(Y))
+                X = np.array(X)
+                X = X.reshape(X.shape[0], 128, 128, 1).astype(
+                    'float32') / 127.5 - 1
+                yield (X, np.array(Y))
                 X = []
                 Y = []
 
 
 # Training generator
-generator.fit_generator(generate_training_data(font, characters, target_images, 32)
+generator.fit_generator(generate_training_data(font, characters, target_images, 32),
                         epochs=epochs_for_generator,
                         verbose=2,
                         callbacks=[save])
