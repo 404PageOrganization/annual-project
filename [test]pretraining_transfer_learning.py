@@ -1,6 +1,6 @@
 from keras.utils import np_utils
 from keras.regularizers import l2
-from keras.models import Model, Sequential
+from keras.models import Model
 from keras.layers import Input, BatchNormalization, Conv2D, UpSampling2D, PReLU, Dropout, MaxPooling2D, Activation
 from keras.callbacks import ModelCheckpoint, Callback
 from keras.optimizers import Adam
@@ -23,7 +23,6 @@ model_data_dir = 'model_data/pretraining.h5'
 
 # Define hyperparameters
 epochs_for_generator = 200
-non_trainable_layers = 18
 save_image_rate = 10
 learning_rate = 0.05
 l2_rate = 0.01
@@ -154,12 +153,6 @@ x = Conv2D(filters=1,
 output = Activation('tanh', name='output')(x)
 generator = Model(inputs=input, outputs=output)
 
-for i, layer in enumerateg(enerator.layers):
-    if i > non_trainable_layers:
-        break
-    else:
-        layer.trainable = False
-
 
 # Print model struct
 print(generator.summary())
@@ -187,7 +180,7 @@ class auto_save(Callback):
         # Save model
         if (epoch + 1) % save_model_rate == 0:
             print('Saving model...')
-            generator.save_weights(model_data_dir)
+            generator.save(model_data_dir)
             print('Saving model succeeded.')
 
 
