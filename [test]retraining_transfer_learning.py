@@ -1,6 +1,6 @@
 from keras.utils import np_utils
 from keras.regularizers import l2
-from keras.models import Model, Sequential
+from keras.models import Model
 from keras.layers import Input, BatchNormalization, Conv2D, UpSampling2D, PReLU, Dropout, MaxPooling2D, Activation
 from keras.callbacks import ModelCheckpoint, Callback
 from keras.optimizers import Adam
@@ -102,7 +102,7 @@ x = Conv2D(input_shape=(128, 128, 1),
            filters=8,
            kernel_size=64,
            padding='same')(input)
-# x = non_local_block(x, compression=2, mode='embedded')
+#x = non_local_block(x, compression=2, mode='embedded')
 x = PReLU()(x)
 x = BatchNormalization()(x)
 x = Conv2D(filters=8,
@@ -129,12 +129,10 @@ x = Conv2D(filters=64,
            kernel_size=16,
            padding='same')(x)
 x = PReLU()(x)
-temp = BatchNormalization()(x)
-
-x = Conv2D(input_shape=(128, 128, 64),
-           filters=128,
+x = BatchNormalization()(x)
+x = Conv2D(filters=128,
            kernel_size=7,
-           padding='same')(temp)
+           padding='same')(x)
 x = PReLU()(x)
 x = BatchNormalization()(x)
 x = Conv2D(filters=128,
@@ -147,20 +145,14 @@ x = Conv2D(filters=1,
            padding='same')(x)
 x = PReLU()(x)
 x = BatchNormalization()(x)
+x = MaxPooling2D(pool_size=2)(x)
 x = Dropout(0.3)(x)
+x = UpSampling2D(size=(2, 2))(x)
+x = Conv2D(filters=1,
+           kernel_size=3,
+           padding='same')(x)
 output = Activation('tanh', name='output')(x)
-
-# Split into two models
-generator_top = Model(inputs=input, outputs=temp)
-generator_rear = Model(inputs=temp, outputs=output)
-
-generator = Sequential([generator_top, generator_rear])
-# Load weights
-generator.load_weights(pretraining_data_dir)
-
-# Set the top of the model not trainable
-generator_top.trainable = False
-
+generator = Model(inputs=input, outputs=output)
 
 # Print model struct
 print(generator.summary())
