@@ -40,9 +40,6 @@ for target_img_file in [name for name in os.listdir(target_img_dir) if name[0] !
         characters.append(target_img_file)
 
 
-# Make raw images & characters
-raw_images = []
-
 # One item in list is a file named ".DS_Store", not a font file, so ignore it
 font_list = [name for name in os.listdir(fonts_dir) if name[0] != '.']
 
@@ -51,23 +48,6 @@ font_name = font_list[0]
 
 # Read font by using truetype
 font = ImageFont.truetype('{}/{}'.format(fonts_dir, font_name), 96)
-
-# Traverse all characters
-for character in characters:
-
-    # Create a L with alpha img
-    img = Image.new(mode='L', size=(128, 128), color=255)
-
-    draw = ImageDraw.Draw(img)
-
-    # Make the font drawn on center
-    text_size = draw.textsize(character, font)
-    text_w = text_size[0]
-    text_h = text_size[1]
-    draw.text((64 - text_w / 2, 64 - text_h / 2),
-              character, font=font, fill=0)
-
-    raw_images.append(list(img.getdata()))
 
 
 # Process image
@@ -188,10 +168,35 @@ class auto_save(Callback):
 save = auto_save()
 
 
+# Dynamic generate training data
+def generate_training_data(font, characters, target_images, batch_size):
+    while 1:
+        ans = 0
+        X = []
+        Y = []
+        for character, target_image in characters, target_images:
+            img = Image.new(mode='L', size=(128, 128), color=255)
+            draw = ImageDraw.Draw(img)
+            # Make the font drawn on center
+            text_size = draw.textsize(character, font)
+            text_w = text_size[0]
+            text_h = text_size[1]
+            draw.text((64 - text_w / 2, 64 - text_h / 2),
+                      character, font=font, fill=0)
+
+            X.append(list(img.getdata()))
+            Y.append(target_image)
+            ans += 1
+
+            if ans == batch_size:
+                ans = 0
+                yield (np.array(X), np.array(Y))
+                X = []
+                Y = []
+
+
 # Training generator
-generator.fit(x=raw_images,
-              y=target_images,
-              epochs=epochs_for_generator,
-              verbose=2,
-              callbacks=[save],
-              validation_split=0.2)
+generator.fit_generator(generate_training_data(font, characters, target_images, 32)
+                        epochs=epochs_for_generator,
+                        verbose=2,
+                        callbacks=[save])
