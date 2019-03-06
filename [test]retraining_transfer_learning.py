@@ -131,7 +131,7 @@ class auto_save(Callback):
                 save_image = ((fake_image + 1) *
                               127.5).astype('uint8').reshape(128, 128)
                 Image.fromarray(save_image, mode='L').save(
-                    '{}/re{}{}.png'.format(fake_img_dir, character, epoch + 1))
+                    '{}/{}re{}.png'.format(fake_img_dir, character, epoch + 1))
 
         # Save model
         if (epoch + 1) % save_model_rate == 0:
