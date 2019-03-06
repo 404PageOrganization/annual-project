@@ -1,4 +1,3 @@
-from keras.utils import np_utils
 from keras.regularizers import l2
 from keras.models import Model
 from keras.layers import Input, BatchNormalization, Conv2D, UpSampling2D, PReLU, Dropout, MaxPooling2D, Activation

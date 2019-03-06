@@ -1,7 +1,4 @@
-from keras.utils import np_utils
-from keras.regularizers import l2
 from keras.models import load_model
-from keras.layers import Input, BatchNormalization, Conv2D, UpSampling2D, PReLU, Dropout, MaxPooling2D, Activation
 from keras.callbacks import ModelCheckpoint, Callback
 from keras.optimizers import Adam
 from non_local import non_local_block
