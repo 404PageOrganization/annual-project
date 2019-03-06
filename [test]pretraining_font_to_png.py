@@ -5,7 +5,7 @@ import os
 
 # Define the abspath
 fonts_dir = 'pretraining_fonts'
-img_dir = 'pretraining_img'
+img_dir = 'pretraining_target_img'
 
 # Read 3500 most used chinese characters
 characters = open('characters.txt', 'r',
