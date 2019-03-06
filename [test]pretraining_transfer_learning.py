@@ -23,6 +23,7 @@ model_data_dir = 'model_data/pretraining.h5'
 
 # Define hyperparameters
 epochs_for_generator = 200
+save_model_rate = 50
 save_image_rate = 10
 learning_rate = 0.05
 l2_rate = 0.01
