@@ -51,7 +51,6 @@ font = ImageFont.truetype('{}/{}'.format(fonts_dir, font_name), 96)
 
 # Use only 20 of characters to save
 batch_raw_images = []
-batch_target_images = target_images[:20]
 batch_characters = characters[:20]
 
 # Traverse batch characters
@@ -75,6 +74,11 @@ for character in batch_characters:
 batch_raw_images = numpy.array(batch_raw_images)
 batch_raw_images = batch_raw_images.reshape(
     batch_raw_images.shape[0], 128, 128, 1).astype('float32') / 127.5 - 1
+target_images = numpy.array(target_images)
+target_images = target_images.reshape(
+    target_images.shape[0], 128, 128, 1).astype('float32') / 127.5 - 1
+
+batch_target_images = target_images[:20]
 
 # Save sample images
 for character, target_image, raw_image in zip(batch_characters, batch_target_images, batch_raw_images):
@@ -185,7 +189,8 @@ def generate_training_data(font, characters, target_images, batch_size):
         ans = 0
         X = []
         Y = []
-        for character, target_image in characters, target_images:
+        characters
+        for character, target_image in zip(characters, target_images):
             img = Image.new(mode='L', size=(128, 128), color=255)
             draw = ImageDraw.Draw(img)
             # Make the font drawn on center
@@ -201,16 +206,17 @@ def generate_training_data(font, characters, target_images, batch_size):
 
             if ans == batch_size:
                 ans = 0
-                X = np.array(X)
+                X = numpy.array(X)
                 X = X.reshape(X.shape[0], 128, 128, 1).astype(
                     'float32') / 127.5 - 1
-                yield (X, np.array(Y))
+                yield (X, numpy.array(Y))
                 X = []
                 Y = []
 
 
 # Training generator
 generator.fit_generator(generate_training_data(font, characters, target_images, 32),
+                        steps_per_epoch=len(characters) // 32,
                         epochs=epochs_for_generator,
                         verbose=2,
                         callbacks=[save])
