@@ -7,7 +7,7 @@ import os
 fonts_dir = 'target_fonts'
 img_dir = 'target_img'
 
-# Read 3500 most used chinese characters
+# Read 624 random picked characters
 characters = open('test.txt', 'r',
                   encoding='utf-8').read().replace('\n', '')
 
