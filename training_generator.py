@@ -55,7 +55,7 @@ font = ImageFont.truetype('{}/{}'.format(fonts_dir, font_name), 96)
 # Traverse all characters
 for character in characters:
 
-    # Create a L with alpha img
+    # Create a grayscale img
     img = Image.new(mode='L', size=(128, 128), color=255)
 
     draw = ImageDraw.Draw(img)

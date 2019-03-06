@@ -27,7 +27,7 @@ for font_name in [name for name in os.listdir(fonts_dir) if name[0] != '.']:
     # Traverse all characters
     for output_text in characters:
 
-        # Create a L with alpha img
+        # Create a grayscale img
         img = Image.new(mode='L', size=(128, 128), color=255)
 
         draw = ImageDraw.Draw(img)
