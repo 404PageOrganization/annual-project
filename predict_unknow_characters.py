@@ -1,5 +1,5 @@
 from keras.models import load_model
-from PIL import Image
+from PIL import Image, ImageFont, ImageDraw
 import os
 import numpy
 
@@ -10,7 +10,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 # Define abspaths
 fonts_dir = 'raw_fonts'
-fake_img_dir = 'fake_img'
+fake_img_dir = 'predict_img'
 model_data_dir = 'model_data/generator.h5'
 
 

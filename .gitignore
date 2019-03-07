@@ -10,6 +10,7 @@
 /pretraining_target_img
 /pretraining_fake_img
 /retraining_fake_img
+/predict_img
 /__pycache__
 fonts_name.dat
 simhei.ttf
