@@ -100,7 +100,7 @@ generator = load_model(pretraining_data_dir)
 
 
 # Set some layers to non_trainable
-for i, layer in enumerateg(enerator.layers):
+for i, layer in enumerate(generator.layers):
     if i > non_trainable_layers:
         break
     else:
