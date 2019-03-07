@@ -1,7 +1,4 @@
-from keras.utils import np_utils
-from keras.regularizers import l2
-from keras.models import Sequential, load_model
-from keras.layers import BatchNormalization, Conv2D, UpSampling2D, PReLU
+from keras.models import load_model
 from PIL import Image
 import os
 import numpy
@@ -12,31 +9,54 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 
 # Define abspaths
-fonts_dir = 'fonts'
-raw_img_dir = 'raw_img'
+fonts_dir = 'raw_fonts'
 fake_img_dir = 'fake_img'
-model_data_dir = 'model_data'
+model_data_dir = 'model_data/generator.h5'
 
 
-# Read raw images & characters
+# Read characters not in training dataset
+characters = open('predict.txt', 'r',
+                  encoding='utf-8').read().replace('\n', '')
+
+
+# Make raw images & characters
 raw_images = []
-characters = []
 
-for raw_img_file in [name for name in os.listdir(raw_img_dir) if name[0] != '.']:
-    for file_name in [name for name in os.listdir(raw_img_dir + '/' + raw_img_file) if name[0] != '.']:
-        raw_images.append(list(Image.open(raw_img_dir + '/' +
-                                          raw_img_file + '/' + file_name).getdata()))
-        characters.append(raw_img_file)
+# One item in list is a file named ".DS_Store", not a font file, so ignore it
+font_list = [name for name in os.listdir(fonts_dir) if name[0] != '.']
+
+# Use 1 font to generate target img
+font_name = font_list[0]
+
+# Read font by using truetype
+font = ImageFont.truetype('{}/{}'.format(fonts_dir, font_name), 96)
+
+# Traverse all characters
+for character in characters:
+
+    # Create a grayscale img
+    img = Image.new(mode='L', size=(128, 128), color=255)
+
+    draw = ImageDraw.Draw(img)
+
+    # Make the font drawn on center
+    text_size = draw.textsize(character, font)
+    text_w = text_size[0]
+    text_h = text_size[1]
+    draw.text((64 - text_w / 2, 64 - text_h / 2),
+              character, font=font, fill=0)
+
+    raw_images.append(list(img.getdata()))
 
 
-# Process img
+# Process image
 raw_images = numpy.array(raw_images)
 raw_images = raw_images.reshape(
     raw_images.shape[0], 128, 128, 1).astype('float32') / 127.5 - 1
 
 
 # Load trained models
-generator = load_model(model_data_dir + '/generator.h5')
+generator = load_model(model_data_dir)
 
 
 # Print model struct
