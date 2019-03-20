@@ -37,19 +37,19 @@ pip install keras tensorflow tensorflow-gpu pillow colorama
 
 ##### 预处理
 
--   make_dirs.py 创建项目所需要的子目录
 -   characters.txt 存放最常用的3500个汉字
--   fonts_sifting.py 筛选字符完整的字体
--   list_fonts.py 生成字体引用文档
 -   font_reference.md 字体引用文档
+-   fonts_sifting.py 筛选字符完整的字体
+-   image_preprocessing.py 进行字体图像的切分（注：此脚本在应用阶段使用）
+-   list_fonts.py 生成字体引用文档
+-   make_dirs.py 创建项目所需要的子目录
 -   raw_font_to_png.py 调用 raw_fonts 目录下的字体，在 raw_img 子目录下生成所需要的源字体图像
 -   target_font_to_png.py 调用 target_fonts 文件夹下的第一个字体，在 target_img 子目录下生成所需要的目标字体图像（注：此脚本在测试阶段使用）
--   image_preprocessing.py 进行字体图像的切分（注：此脚本在应用阶段使用）
 
 ##### 网络及其训练
 
--   fonts_name.dat 以二进制格式存储风格判别网络训练时读入的字体名称
 -   custom_layers.py 自定义向量层
+-   fonts_name.dat 以二进制格式存储风格判别网络训练时读入的字体名称
 -   style_discrimination.py 风格判别网络训练
 -   style_prediction.py 使用风格判别网络预测字体风格
 -   training_generator.py 训练风格迁移网络
