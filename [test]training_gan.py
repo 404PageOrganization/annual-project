@@ -28,6 +28,8 @@ batch_size = 32
 save_model_rate = 50
 save_image_rate = 10
 learning_rate = 0.05
+df = 32
+gf = 32
 
 
 # Read target images & characters
@@ -94,8 +96,6 @@ for character, target_image, raw_image in zip(batch_characters, batch_target_ima
 
 # Define U-Net generator
 def build_generator():
-    gf = 32
-
     def conv2d(layer_input, filters, f_size=4, bn=True):
         d = Conv2D(filters, kernel_size=f_size,
                    strides=2, padding='same')(layer_input)
@@ -142,8 +142,6 @@ def build_generator():
 
 # Define PatchGAN discriminator
 def build_discriminator():
-    df = 32
-
     def d_layer(layer_input, filters, f_size=4, bn=True):
         d = Conv2D(filters, kernel_size=f_size,
                    strides=2, padding='same')(layer_input)
@@ -152,9 +150,11 @@ def build_discriminator():
             d = BatchNormalization(d)
         return d
 
+    # img_A is target image or fake image, and img_B is raw_img
     img_A = Input(shape=(128, 128, 1))
     img_B = Input(shape=(128, 128, 1))
 
+    # Concatenate two images by channel to produce input
     combined_imgs = Concatenate(axis=-1)([img_A, img_B])
 
     d1 = d_layer(combined_imgs, df, bn=False)
@@ -171,14 +171,14 @@ def build_discriminator():
 discriminator = build_discriminator()
 discriminator.compile(loss='mse',
                            optimizer=optimizer,
-                           metrics=['accuracy'])
+                           metrics=['acc'])
 discriminator.trainable = False
 generator = build_generator()
 
 img_A = Input(shape=(128, 128, 1))
 img_B = Input(shape=(128, 128, 1))
-fake_A = self.generator(img_B)
-valid = self.discriminator([fake_A, img_B])
+fake_A = generator(img_B)
+valid = discriminator([fake_A, img_B])
 
 gan = Model(inputs=[img_A, img_B], outputs=[valid, fake_A])
 gan.compile(loss=['mse', 'mae'],
@@ -236,30 +236,33 @@ def save_model():
 
 
 # Train GAN
-gan_patch = (64, 64)
-
 def train():
     # Set start time
     start_time = datetime.datetime.now()
 
     # Define ground truth for D
-    real = np.ones((batch_size,) + gan_patch)
-    fake = np.zeros((batch_size,) + gan_patch)
+    gan_patch = (64, 64, 1)
+    target_truth = np.ones((batch_size,) + gan_patch)
+    fake_truth = np.zeros((batch_size,) + gan_patch)
 
     # Tarin D first and G next for each epoch
     for epoch in range(epochs_for_gan):
         for batch_i, (raw_image, target_image) in enumerate(generate_training_data(font, characters, target_images, batch_size)):
             # Train D
             fake_image = generator.predict(raw_image)
-            d_loss_target = discriminator.train_on_batch([raw_image, target_image], real)
-            d_loss_fake = discriminator.train_on_batch([fake_image, target_image], fake)
+            d_loss_target = discriminator.train_on_batch(
+                [target_image, raw_image], target_truth)
+            d_loss_fake = discriminator.train_on_batch(
+                [fake_image, raw_image], fake_truth)
             d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
 
             # Train G (now D.trainable == false)
-            g_loss = gan.train_on_batch([raw_image, target_image], [real, raw_image])
+            g_loss = gan.train_on_batch(
+                [target_image, raw_image], [target_truth, raw_image])
 
             # Print epoch & loss
-            print("--- epochs %d/%d --- D loss = %f --- G loss = %f --- time: %s", epoch + 1, epochs_for_gan, d_loss, g_loss, datetime.datetime.now() - start_time)
+            print("--- epoch %d/%d --- D loss = %f --- G loss = %f --- time: %s", epoch +
+                  1, epochs_for_gan, d_loss, g_loss, datetime.datetime.now() - start_time)
             start_time = datetime.datetime.now()
 
             # Save image & model
@@ -267,5 +270,6 @@ def train():
                 save_image()
             if (epoch + 1) % save_model_rate == 0:
                 save_model()
+
 
 train()
