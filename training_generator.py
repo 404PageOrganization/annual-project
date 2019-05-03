@@ -135,7 +135,17 @@ x = Conv2D(filters=128,
 x = PReLU()(x)
 x = BatchNormalization()(x)
 x = Conv2D(filters=128,
-           kernel_size=7,
+           kernel_size=3,
+           padding='same')(x)
+x = PReLU()(x)
+x = BatchNormalization()(x)
+x = Conv2D(filters=128,
+           kernel_size=3,
+           padding='same')(x)
+x = PReLU()(x)
+x = BatchNormalization()(x)
+x = Conv2D(filters=128,
+           kernel_size=3,
            padding='same')(x)
 x = PReLU()(x)
 x = BatchNormalization()(x)
