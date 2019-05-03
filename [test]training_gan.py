@@ -114,6 +114,7 @@ def build_generator():
         u = Concatenate()([u, skip_input])
         return u
 
+    # Input raw image
     d0 = Input(shape=(128, 128, 1))
 
     # Downsampling
@@ -132,8 +133,9 @@ def build_generator():
     u4 = deconv2d(u3, d3, gf * 4)
     u5 = deconv2d(u4, d2, gf * 2)
     u6 = deconv2d(u5, d1, gf)
-
     u7 = UpSampling2D(size=2)(u6)
+
+    # Output fake image
     output_img = Conv2D(1, kernel_size=4,
                         strides=1, padding='same', activation='tanh')(u7)
 
@@ -162,6 +164,7 @@ def build_discriminator():
     d3 = d_layer(d2, df * 4)
     d4 = d_layer(d3, df * 8)
 
+    # Output
     validity = Conv2D(1, kernel_size=4, strides=1, padding='same')(d4)
 
     return Model([img_A, img_B], validity)
@@ -178,9 +181,9 @@ generator = build_generator()
 img_A = Input(shape=(128, 128, 1))
 img_B = Input(shape=(128, 128, 1))
 fake_A = generator(img_B)
-valid = discriminator([fake_A, img_B])
+validity = discriminator([fake_A, img_B])
 
-gan = Model(inputs=[img_A, img_B], outputs=[valid, fake_A])
+gan = Model(inputs=[img_A, img_B], outputs=[validity, fake_A])
 gan.compile(loss=['mse', 'mae'],
             loss_weights=[1, 100],
             optimizer=Adam(lr=learning_rate))
@@ -240,8 +243,10 @@ def train():
     # Set start time
     start_time = datetime.datetime.now()
 
+    # Output size of D, here 8 == 128 / 2 ** 4
+    gan_patch = (8, 8, 1)
+
     # Define ground truth for D
-    gan_patch = (64, 64, 1)
     target_truth = np.ones((batch_size,) + gan_patch)
     fake_truth = np.zeros((batch_size,) + gan_patch)
 
