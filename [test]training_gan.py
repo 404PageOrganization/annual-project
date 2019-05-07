@@ -225,11 +225,10 @@ def generate_training_data(font, characters, target_images, batch_size):
                 return
 
 
-
 # Save sample images
 def save_image():
     print('Saving fake images...')
-    fake_images = gan.predict(x=batch_raw_images, verbose=1)
+    fake_images = generator.predict(x=batch_raw_images, verbose=1)
     for character, fake_image in zip(batch_characters, fake_images):
         save_image = ((fake_image + 1) *
                       127.5).astnpype('uint8').reshape(128, 128)
@@ -247,7 +246,8 @@ def save_model():
 
 # Train GAN
 def train():
-    print("Training on %d epochs, %d batch size..." % (epochs_for_gan, batch_size))
+    print("Training on %d epochs, %d batch size..." %
+          (epochs_for_gan, batch_size))
 
     # Set start time
     start_time = datetime.datetime.now()
@@ -261,7 +261,8 @@ def train():
 
     # Tarin D first and G next for each epoch
     for epoch_i in range(epochs_for_gan):
-        data = generate_training_data(font, characters, target_images, batch_size)
+        data = generate_training_data(
+            font, characters, target_images, batch_size)
         for batch_i, (raw_image, target_image) in enumerate(data):
             # Train D
             fake_image = generator.predict(raw_image)
@@ -276,8 +277,8 @@ def train():
                 [target_image, raw_image], [target_truth, raw_image])
 
         # Print epoch & loss
-        print("--- epoch %d/%d --- D loss = %f --- GAN, D, G loss = %r --- time: %s ---" % (epoch_i + 1,
-            epochs_for_gan, d_loss, gan_loss, datetime.datetime.now() - start_time))
+        print("--- epoch %d/%d ---\nD loss: %f,  GAN/D/G loss: %r\ntime: %s" %
+              (epoch_i + 1, epochs_for_gan, d_loss, gan_loss, datetime.datetime.now() - start_time))
 
         start_time = datetime.datetime.now()
 
