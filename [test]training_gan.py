@@ -101,7 +101,7 @@ def build_generator():
                    strides=2, padding='same')(layer_input)
         d = PReLU()(d)
         if bn:
-            d = BatchNormalization(d)
+            d = BatchNormalization()(d)
         return d
 
     def deconv2d(layer_input, skip_input, filters, f_size=4, dropout_rate=0):
@@ -110,7 +110,7 @@ def build_generator():
                    padding='same', activation='relu')(u)
         if dropout_rate:
             u = Dropout(dropout_rate)(u)
-        u = BatchNormalization(u)
+        u = BatchNormalization()(u)
         u = Concatenate()([u, skip_input])
         return u
 
@@ -149,7 +149,7 @@ def build_discriminator():
                    strides=2, padding='same')(layer_input)
         d = PReLU()(d)
         if bn:
-            d = BatchNormalization(d)
+            d = BatchNormalization()(d)
         return d
 
     # img_A is target image or fake image, and img_B is raw_img
@@ -173,7 +173,7 @@ def build_discriminator():
 # Complie GAN model
 discriminator = build_discriminator()
 discriminator.compile(loss='mse',
-                           optimizer=optimizer,
+                           optimizer=Adam(lr=learning_rate),
                            metrics=['acc'])
 discriminator.trainable = False
 generator = build_generator()
@@ -187,6 +187,8 @@ gan = Model(inputs=[img_A, img_B], outputs=[validity, fake_A])
 gan.compile(loss=['mse', 'mae'],
             loss_weights=[1, 100],
             optimizer=Adam(lr=learning_rate))
+
+print("Model compiled successfully.")
 
 
 # Dynamically generate training data
@@ -222,24 +224,27 @@ def generate_training_data(font, characters, target_images, batch_size):
 
 # Save sample images
 def save_image():
-    print('Saving fake images.')
+    print('Saving fake images...')
     fake_images = gan.predict(x=batch_raw_images, verbose=1)
     for character, fake_image in zip(batch_characters, fake_images):
         save_image = ((fake_image + 1) *
                       127.5).astype('uint8').reshape(128, 128)
         Image.fromarray(save_image, mode='L').save(
             '{}/{}pre{}.png'.format(fake_img_dir, character, epoch + 1))
+    print('Images saved successfully.')
 
 
 # Save model
 def save_model():
     print('Saving model...')
     gan.save(model_data_dir)
-    print('Saving model succeeded.')
+    print('Model saved successfully.')
 
 
 # Train GAN
 def train():
+    print("Training on %d epochs, %d batch size..." % (epochs_for_gan, batch_size))
+
     # Set start time
     start_time = datetime.datetime.now()
 
@@ -259,22 +264,24 @@ def train():
                 [target_image, raw_image], target_truth)
             d_loss_fake = discriminator.train_on_batch(
                 [fake_image, raw_image], fake_truth)
-            d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
+            d_loss = 0.5 * np.add(d_loss_target, d_loss_fake)
 
             # Train G (now D.trainable == false)
             g_loss = gan.train_on_batch(
                 [target_image, raw_image], [target_truth, raw_image])
 
-            # Print epoch & loss
-            print("--- epoch %d/%d --- D loss = %f --- G loss = %f --- time: %s", epoch +
-                  1, epochs_for_gan, d_loss, g_loss, datetime.datetime.now() - start_time)
-            start_time = datetime.datetime.now()
+            print("batch: ", batch_i + 1)
 
-            # Save image & model
-            if (epoch + 1) % save_image_rate == 0:
-                save_image()
-            if (epoch + 1) % save_model_rate == 0:
-                save_model()
+        # Print epoch & loss
+        print("--- epoch %d/%d --- D loss = %f --- G loss = %f --- time: %s ---" % (epoch +
+              1, epochs_for_gan, d_loss, g_loss, datetime.datetime.now() - start_time))
+        start_time = datetime.datetime.now()
+
+        # Save image & model
+        if (epoch + 1) % save_image_rate == 0:
+            save_image()
+        if (epoch + 1) % save_model_rate == 0:
+            save_model()
 
 
 train()
