@@ -226,14 +226,14 @@ def generate_training_data(font, characters, target_images, batch_size):
 
 
 # Save sample images
-def save_image():
+def save_image(epoch):
     print('Saving fake images...')
     fake_images = generator.predict(x=batch_raw_images, verbose=1)
     for character, fake_image in zip(batch_characters, fake_images):
         save_image = ((fake_image + 1) *
-                      127.5).astnpype('uint8').reshape(128, 128)
+                      127.5).astype('uint8').reshape(128, 128)
         Image.fromarray(save_image, mode='L').save(
-            '{}/{}pre{}.png'.format(fake_img_dir, character, epoch + 1))
+            '{}/{}{}.png'.format(fake_img_dir, character, epoch + 1))
     print('Images saved successfully.')
 
 
@@ -274,17 +274,17 @@ def train():
 
             # Train G (now D.trainable == false)
             gan_loss = gan.train_on_batch(
-                [target_image, raw_image], [target_truth, raw_image])
+                [target_image, raw_image], [target_truth, target_image])
 
         # Print epoch & loss
-        print("--- epoch %d/%d ---\nD loss: %f,  GAN/D/G loss: %r\ntime: %s" %
+        print("--- epoch %d/%d ---\nD loss: %f, GAN/D/G loss: %r\ntime: %s" %
               (epoch_i + 1, epochs_for_gan, d_loss, gan_loss, datetime.datetime.now() - start_time))
 
         start_time = datetime.datetime.now()
 
         # Save image & model
         if (epoch_i + 1) % save_image_rate == 0:
-            save_image()
+            save_image(epoch_i)
         if (epoch_i + 1) % save_model_rate == 0:
             save_model()
 
