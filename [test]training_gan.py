@@ -193,33 +193,37 @@ print("Model compiled successfully.")
 
 # Dynamically generate training data
 def generate_training_data(font, characters, target_images, batch_size):
-    while 1:
-        ans = 0
-        X = []
-        Y = []
-        characters
-        for character, target_image in zip(characters, target_images):
-            img = Image.new(mode='L', size=(128, 128), color=255)
-            draw = ImageDraw.Draw(img)
-            # Make the font drawn on center
-            text_size = draw.textsize(character, font)
-            text_w = text_size[0]
-            text_h = text_size[1]
-            draw.text((64 - text_w / 2, 64 - text_h / 2),
-                      character, font=font, fill=0)
+    it = 0
+    ans = 0
+    X = []
+    Y = []
+    characters
+    for character, target_image in zip(characters, target_images):
+        img = Image.new(mode='L', size=(128, 128), color=255)
+        draw = ImageDraw.Draw(img)
+        # Make the font drawn on center
+        text_size = draw.textsize(character, font)
+        text_w = text_size[0]
+        text_h = text_size[1]
+        draw.text((64 - text_w / 2, 64 - text_h / 2),
+                  character, font=font, fill=0)
 
-            X.append(list(img.getdata()))
-            Y.append(target_image)
-            ans += 1
+        X.append(list(img.getdata()))
+        Y.append(target_image)
+        ans += 1
 
-            if ans == batch_size:
-                ans = 0
-                X = np.array(X)
-                X = X.reshape(X.shape[0], 128, 128, 1).astype(
-                    'float32') / 127.5 - 1
-                yield (X, np.array(Y))
-                X = []
-                Y = []
+        if ans == batch_size:
+            ans = 0
+            X = np.array(X)
+            X = X.reshape(X.shape[0], 128, 128, 1).astype(
+                'float32') / 127.5 - 1
+            yield (X, np.array(Y))
+            X = []
+            Y = []
+            it += 1
+            if it == len(characters) // batch_size:
+                return
+
 
 
 # Save sample images
@@ -228,7 +232,7 @@ def save_image():
     fake_images = gan.predict(x=batch_raw_images, verbose=1)
     for character, fake_image in zip(batch_characters, fake_images):
         save_image = ((fake_image + 1) *
-                      127.5).astype('uint8').reshape(128, 128)
+                      127.5).astnpype('uint8').reshape(128, 128)
         Image.fromarray(save_image, mode='L').save(
             '{}/{}pre{}.png'.format(fake_img_dir, character, epoch + 1))
     print('Images saved successfully.')
@@ -256,31 +260,31 @@ def train():
     fake_truth = np.zeros((batch_size,) + gan_patch)
 
     # Tarin D first and G next for each epoch
-    for epoch in range(epochs_for_gan):
-        for batch_i, (raw_image, target_image) in enumerate(generate_training_data(font, characters, target_images, batch_size)):
+    for epoch_i in range(epochs_for_gan):
+        data = generate_training_data(font, characters, target_images, batch_size)
+        for batch_i, (raw_image, target_image) in enumerate(data):
             # Train D
             fake_image = generator.predict(raw_image)
             d_loss_target = discriminator.train_on_batch(
-                [target_image, raw_image], target_truth)
+                [target_image, raw_image], target_truth)[0]
             d_loss_fake = discriminator.train_on_batch(
-                [fake_image, raw_image], fake_truth)
-            d_loss = 0.5 * np.add(d_loss_target, d_loss_fake)
+                [fake_image, raw_image], fake_truth)[0]
+            d_loss = (d_loss_target + d_loss_fake) / 2
 
             # Train G (now D.trainable == false)
-            g_loss = gan.train_on_batch(
+            gan_loss = gan.train_on_batch(
                 [target_image, raw_image], [target_truth, raw_image])
 
-            print("batch: ", batch_i + 1)
-
         # Print epoch & loss
-        print("--- epoch %d/%d --- D loss = %f --- G loss = %f --- time: %s ---" % (epoch +
-              1, epochs_for_gan, d_loss, g_loss, datetime.datetime.now() - start_time))
+        print("--- epoch %d/%d --- D loss = %f --- GAN, D, G loss = %r --- time: %s ---" % (epoch_i + 1,
+            epochs_for_gan, d_loss, gan_loss, datetime.datetime.now() - start_time))
+
         start_time = datetime.datetime.now()
 
         # Save image & model
-        if (epoch + 1) % save_image_rate == 0:
+        if (epoch_i + 1) % save_image_rate == 0:
             save_image()
-        if (epoch + 1) % save_model_rate == 0:
+        if (epoch_i + 1) % save_model_rate == 0:
             save_model()
 
 
