@@ -11,11 +11,11 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 # Define abspaths
 fonts_dir = 'raw_fonts'
 fake_img_dir = 'predict_img'
-model_data_dir = 'model_data/retraining.h5'
+model_data_dir = 'model_data/generator.h5'
 
 
-# Read characters not in training dataset
-characters = open('predict.txt', 'r',
+# Read all characters
+characters = open('characters.txt', 'r',
                   encoding='utf-8').read().replace('\n', '')
 
 

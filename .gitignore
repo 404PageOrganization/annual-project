@@ -4,12 +4,8 @@
 /fake_img_mosaicking
 /fonts_reserve
 /model_data
-/predict_img
-/pretraining_fake_img
-/pretraining_fonts
-/pretraining_target_img
+/generated_img
 /raw_fonts
-/retraining_fake_img
 /target_fonts
 /target_img
 /target_img_origin
