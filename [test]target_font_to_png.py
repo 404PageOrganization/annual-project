@@ -8,7 +8,7 @@ fonts_dir = 'target_fonts'
 img_dir = 'target_img'
 
 # Use font to generate target image
-characters = open('test.txt', 'r',
+characters = open('characters.txt', 'r',
                   encoding='utf-8').read().replace('\n', '')
 
 # Use all fonts in fonts' directory
