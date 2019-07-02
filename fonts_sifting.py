@@ -11,7 +11,7 @@ characters = open('characters.txt', 'r',
                   encoding='utf-8').read().replace('\n', '')
 
 # Use all fonts in fonts directory
-# One item in list is a file named ".DS_Store", not a font file, so ignore it
+# One item in list is a file named '.DS_Store', not a font file, so ignore it
 for font_name in [name for name in os.listdir(fonts_dir) if name[0] != '.']:
 
     # Read font by using truetype

@@ -6,8 +6,8 @@ import numpy as np
 import cv2
 
 
-in_dir = "target_img_origin/"
-out_dir = "target_img/"
+in_dir = 'target_img_origin/'
+out_dir = 'target_img/'
 val_min = 10    # the threshold value
 range_min = 60    # the minimum size of a character
 count = 0    # the serial number
@@ -86,7 +86,7 @@ def resize_img(img):
     img = img.resize((w1, h1), Image.ANTIALIAS)
     img_new = Image.new(mode='L', size=(128, 128), color=255)
     img_new.paste(img, (int(64 - w1 / 2), int(64 - h1 / 2) + 12))
-    img_new.save(out_dir + str(count) + ".png", 'png')
+    img_new.save(out_dir + str(count) + '.png', 'png')
 
 
 print('strat running')

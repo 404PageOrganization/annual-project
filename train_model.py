@@ -52,7 +52,7 @@ for target_img_file in os.listdir(target_img_dir):
     characters.append(target_img_file.split('.')[0])
 
 
-# One item in list is a file named ".DS_Store", not a font file, so ignore it
+# One item in list is a file named '.DS_Store', not a font file, so ignore it
 font_list = [name for name in os.listdir(fonts_dir) if name[0] != '.']
 
 # Use 1 font to generate target img
@@ -203,7 +203,7 @@ gan.compile(loss=['mse', 'mae'],
             optimizer=Adam(lr=learning_rate))
 
 print(colorama.Fore.GREEN + colorama.Style.BRIGHT +
-      "Model compiled successfully.")
+      'Model compiled successfully.')
 
 
 # Dynamically generate training data
@@ -266,7 +266,7 @@ def save_model():
 
 # Train GAN
 def train():
-    print("Training on %d samples, %d epochs with batch size %d..." %
+    print('Training on %d samples, %d epochs with batch size %d...' %
           (len(characters), epochs_for_gan, batch_size))
 
     # Set start time
@@ -306,7 +306,7 @@ def train():
         start_time = datetime.datetime.now()
 
         # Print epoch & loss
-        print("epoch %d/%d \t D loss: %f, G loss: %f \t time: %ds, ETA: %s" %
+        print('epoch %d/%d \t D loss: %f, G loss: %f \t time: %ds, ETA: %s' %
               (epoch_i+1, epochs_for_gan, d_loss_total/batch_size, g_loss_total/batch_size, duration.seconds, (epochs_for_gan-epoch_i-1)*duration))
 
         # Save image & model
@@ -317,5 +317,7 @@ def train():
 
 
 train()
-
+print(colorama.Fore.GREEN + colorama.Style.BRIGHT + 'Train finished.')
 image_mosaick()
+print(colorama.Fore.GREEN + colorama.Style.BRIGHT +
+      'Successfully output mosaic image .')
