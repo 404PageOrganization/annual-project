@@ -4,21 +4,15 @@
 
 #### 需要的环境
 
--   conda
+本项目仅在 python 3.6.8 版本下测试通过
+
+使用 requirements 快速安装环境：
 
 ```bash
-conda install keras tensorflow-gpu pillow colorama
+pip install -r requirements.txt
 ```
 
-或者
-
--   pip
-
-```bash
-pip install keras tensorflow tensorflow-gpu pillow colorama
-```
-
-如果你的电脑有较新的 NVIDIA 显卡，可以安装 CUDA9.0 与 CUDNN 来使用 GPU 加速。
+如果你的电脑有较新的 NVIDIA 显卡，可以安装 CUDA 与 CUDNN 来使用 GPU 加速。
 
 #### 目录结构
 
@@ -36,10 +30,11 @@ pip install keras tensorflow tensorflow-gpu pillow colorama
 
 ##### 预处理
 
+-   [test]target_font_to_png.py 调用 target_fonts 文件夹下的第一个字体，在 target_img 子目录下生成所需要的目标字体图像（注：此脚本在测试阶段使用）
 -   fonts_sifting.py 筛选字符完整的字体
 -   image_preprocessing.py 进行字体图像的切分（注：此脚本在应用阶段使用）
 -   make_dirs.py 创建项目所需要的子目录
--   [test]target_font_to_png.py 调用 target_fonts 文件夹下的第一个字体，在 target_img 子目录下生成所需要的目标字体图像（注：此脚本在测试阶段使用）
+-   requirements.txt 依赖包
 
 ##### 网络训练
 
@@ -53,5 +48,5 @@ pip install keras tensorflow tensorflow-gpu pillow colorama
 
 ##### lib
 
--   image_mosaicking.py 在网络生成训练结果后，制作一张训练进度图
 -   custom_layers.py 自定义向量层
+-   image_mosaicking.py 在网络生成训练结果后，制作一张训练进度图
