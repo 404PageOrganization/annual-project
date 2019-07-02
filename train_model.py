@@ -38,17 +38,18 @@ learning_rate = 0.0001
 l2_rate = 0.01
 df = 64
 gf = 64
-
+norm_scale = 0.07
 
 # Read target images & characters
 target_images = []
 characters = []
 
-for target_img_file in [name for name in os.listdir(target_img_dir) if name[0] != '.']:
-    for file_name in [name for name in os.listdir('{}/{}'.format(target_img_dir, target_img_file)) if name[0] != '.']:
-        target_images.append(list(Image.open('{}/{}/{}'.format(target_img_dir,
-                                                               target_img_file, file_name)).getdata()))
-        characters.append(target_img_file)
+for target_img_file in os.listdir(target_img_dir):
+    if target_img_file[0] == '.':
+        continue
+    target_images.append(
+        list(Image.open('{}/{}'.format(target_img_dir, target_img_file)).getdata()))
+    characters.append(target_img_file.split('.')[0])
 
 
 # One item in list is a file named ".DS_Store", not a font file, so ignore it
@@ -211,7 +212,7 @@ def generate_training_data(font, characters, target_images, batch_size):
     ans = 0
     X = []
     Y = []
-    characters
+
     for character, target_image in zip(characters, target_images):
         img = Image.new(mode='L', size=(128, 128), color=255)
         draw = ImageDraw.Draw(img)
@@ -231,6 +232,8 @@ def generate_training_data(font, characters, target_images, batch_size):
             X = np.array(X)
             X = X.reshape(X.shape[0], 128, 128, 1).astype(
                 'float32') / 127.5 - 1
+            X += np.random.normal(size=(X.shape[0], 128, 128, 1), scale=norm_scale)
+
             yield (X, np.array(Y))
             X = []
             Y = []
@@ -262,8 +265,8 @@ def save_model():
 
 # Train GAN
 def train():
-    print("Training on %d epochs, batch size of %d..." %
-          (epochs_for_gan, batch_size))
+    print("Training on %d samples, %d epochs with batch size %d..." %
+          (len(characters), epochs_for_gan, batch_size))
 
     # Set start time
     start_time = datetime.datetime.now()
@@ -287,9 +290,9 @@ def train():
             # Train D
             fake_image = generator.predict(raw_image)
             discriminator.train_on_batch(
-                [target_image, raw_image], target_truth)[0]
+                [target_image, raw_image], target_truth)
             discriminator.train_on_batch(
-                [fake_image, raw_image], fake_truth)[0]
+                [fake_image, raw_image], fake_truth)
 
             # Train G (now D.trainable == false)
             gan_loss = gan.train_on_batch(
@@ -298,11 +301,12 @@ def train():
             d_loss_total += gan_loss[1]
             g_loss_total += gan_loss[2]
 
-        # Print epoch & loss
-        print("epoch %d/%d \t D loss: %f, G loss: %f \t time: %s" %
-              (epoch_i+1, epochs_for_gan, d_loss_total/batch_size, g_loss_total/batch_size, datetime.datetime.now() - start_time))
-
+        duration = datetime.datetime.now() - start_time
         start_time = datetime.datetime.now()
+
+        # Print epoch & loss
+        print("epoch %d/%d \t D loss: %f, G loss: %f \t time: %ds, ETA: %s" %
+              (epoch_i+1, epochs_for_gan, d_loss_total/batch_size, g_loss_total/batch_size, duration.seconds, (epochs_for_gan-epoch_i-1)*duration))
 
         # Save image & model
         if (epoch_i + 1) % save_image_rate == 0:
