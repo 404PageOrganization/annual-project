@@ -1,49 +1,54 @@
-from PIL import Image, ImageDraw, ImageFont
-from keras.callbacks import ModelCheckpoint, Callback
 from keras.layers import Input, Reshape, Dropout, Concatenate, BatchNormalization
 from keras.layers.advanced_activations import PReLU
 from keras.layers.convolutional import UpSampling2D, Conv2D
+from keras.initializers import RandomNormal
+from keras.regularizers import l2
 from keras.models import Model
+from keras.callbacks import ModelCheckpoint, Callback
 from keras.optimizers import Adam
-import colorama
+from non_local import non_local_block
+from PIL import Image, ImageDraw, ImageFont
 import datetime
-import numpy as np
 import os
+import numpy as np
 
 
 # See https://stackoverflow.com/questions/42270739/how-do-i-resolve-these-tensorflow-warnings
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 
-colorama.init(autoreset=True)
-
-
 # Define abspaths
 fonts_dir = 'raw_fonts'
 target_img_dir = 'target_img'
 fake_img_dir = 'fake_img'
-model_data_dir = 'model_data/gan.h5'
+predict_img_dir = 'predict_img'
+model_data_dir = 'model_data/pretraining.h5'
 
-
+ 
 # Define hyperparameters
-epochs_for_gan = 200
+epochs_for_gan = 150
 batch_size = 32
 save_model_rate = 50
 save_image_rate = 10
-learning_rate = 0.05
-df = 32
-gf = 32
+learning_rate = 0.0001
+l2_rate = 0.01
+df = 64
+gf = 64
 
 
 # Read target images & characters
 target_images = []
 characters = []
+predict_characters = []
 
 for target_img_file in [name for name in os.listdir(target_img_dir) if name[0] != '.']:
     for file_name in [name for name in os.listdir('{}/{}'.format(target_img_dir, target_img_file)) if name[0] != '.']:
         target_images.append(list(Image.open('{}/{}/{}'.format(target_img_dir,
                                                                target_img_file, file_name)).getdata()))
         characters.append(target_img_file)
+
+predict_characters = open('predict.txt', 'r',
+                          encoding='utf-8').read().replace('\n', '')
 
 
 # One item in list is a file named ".DS_Store", not a font file, so ignore it
@@ -101,7 +106,9 @@ for character, target_image, raw_image in zip(batch_characters, batch_target_ima
 def build_generator():
     def conv2d(layer_input, filters, f_size=4, bn=True):
         d = Conv2D(filters, kernel_size=f_size,
-                   strides=2, padding='same')(layer_input)
+                   strides=2, padding='same',
+                   kernel_initializer=RandomNormal(mean=0.0, stddev=0.05, seed=None),
+                   kernel_regularizer = l2(l2_rate))(layer_input)
         d = PReLU()(d)
         if bn:
             d = BatchNormalization()(d)
@@ -110,7 +117,8 @@ def build_generator():
     def deconv2d(layer_input, skip_input, filters, f_size=4, dropout_rate=0):
         u = UpSampling2D(size=2)(layer_input)
         u = Conv2D(filters, kernel_size=f_size, strides=1,
-                   padding='same', activation='relu')(u)
+                   padding='same', activation='relu',
+                   kernel_initializer=RandomNormal(mean=0.0, stddev=0.05, seed=None))(u)
         if dropout_rate:
             u = Dropout(dropout_rate)(u)
         u = BatchNormalization()(u)
@@ -149,7 +157,8 @@ def build_generator():
 def build_discriminator():
     def d_layer(layer_input, filters, f_size=4, bn=True):
         d = Conv2D(filters, kernel_size=f_size,
-                   strides=2, padding='same')(layer_input)
+                   strides=2, padding='same',
+                   kernel_initializer=RandomNormal(mean=0.0, stddev=0.05, seed=None))(layer_input)
         d = PReLU()(d)
         if bn:
             d = BatchNormalization()(d)
@@ -191,7 +200,7 @@ gan.compile(loss=['mse', 'mae'],
             loss_weights=[1, 100],
             optimizer=Adam(lr=learning_rate))
 
-print(colorama.Fore.GREEN + "Model compiled successfully.")
+print("Model compiled successfully.")
 
 
 # Dynamically generate training data
@@ -237,19 +246,24 @@ def save_image(epoch):
                       127.5).astype('uint8').reshape(128, 128)
         Image.fromarray(save_image, mode='L').save(
             '{}/{}{}.png'.format(fake_img_dir, character, epoch + 1))
-    print(colorama.Fore.GREEN + 'Images saved successfully.')
+    print('Images saved successfully.')
 
 
 # Save model
 def save_model():
     print('Saving model...')
     gan.save(model_data_dir)
-    print(colorama.Fore.GREEN + 'Model saved successfully.')
+    print('Model saved successfully.')
 
+# Save predicted images
+def save_prediction():
+    print('Saving predicted images...')
+    # TODO
+    print('Predicted images saved successfully.')
 
 # Train GAN
 def train():
-    print("Training on %d epochs, %d batch size..." %
+    print("Training on %d epochs, batch size of %d..." %
           (epochs_for_gan, batch_size))
 
     # Set start time
@@ -266,28 +280,22 @@ def train():
     for epoch_i in range(epochs_for_gan):
         data = generate_training_data(
             font, characters, target_images, batch_size)
-        
-        d_loss_total = .0
-        g_loss_total = .0
-        
-        for raw_image, target_image in data:
+        for batch_i, (raw_image, target_image) in enumerate(data):
             # Train D
             fake_image = generator.predict(raw_image)
-            discriminator.train_on_batch(
+            d_loss_target = discriminator.train_on_batch(
                 [target_image, raw_image], target_truth)[0]
-            discriminator.train_on_batch(
+            d_loss_fake = discriminator.train_on_batch(
                 [fake_image, raw_image], fake_truth)[0]
+            d_loss = (d_loss_target + d_loss_fake) / 2
 
             # Train G (now D.trainable == false)
             gan_loss = gan.train_on_batch(
                 [target_image, raw_image], [target_truth, target_image])
-            
-            d_loss_total += gan_loss[1]
-            g_loss_total += gan_loss[2]
 
         # Print epoch & loss
-        print("epoch %d/%d \t D loss: %f, G loss: %f \t time: %s" %
-              (epoch_i+1, epochs_for_gan, d_loss_total/batch_size, g_loss_total/batch_size, datetime.datetime.now()-start_time))
+        print("--- epoch %d/%d ---\nD loss: %f, GAN/D/G loss: %r\ntime: %s" %
+              (epoch_i + 1, epochs_for_gan, d_loss, gan_loss, datetime.datetime.now() - start_time))
 
         start_time = datetime.datetime.now()
 
