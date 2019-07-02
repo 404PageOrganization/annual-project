@@ -7,15 +7,9 @@ import os
 fonts_dir = 'target_fonts'
 img_dir = 'target_img'
 
-# Read 624 random picked characters
+# Use font to generate target image
 characters = open('test.txt', 'r',
                   encoding='utf-8').read().replace('\n', '')
-
-# Make all directories
-for output_text in characters:
-    dir = '{}/{}'.format(img_dir, output_text)
-    if not os.path.exists(dir):
-        os.mkdir(dir)
 
 # Use all fonts in fonts' directory
 # One item in list is a file named ".DS_Store", not a font file, so ignore it
@@ -40,5 +34,4 @@ for font_name in [name for name in os.listdir(fonts_dir) if name[0] != '.']:
                   output_text, font=font, fill=0)
 
         # Save the image
-        img.save('{}/{}/{}'.format(img_dir, output_text,
-                                   font_name.replace('.ttf', '.png').replace('.ttc', '.png'), "PNG"))
+        img.save('{}/{}.png'.format(img_dir, output_text), "PNG")

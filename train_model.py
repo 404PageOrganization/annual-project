@@ -7,6 +7,7 @@ from keras.layers.convolutional import UpSampling2D, Conv2D
 from keras.models import Model
 from keras.optimizers import Adam
 from keras.regularizers import l2
+from lib.image_mosaicking import image_mosaick
 import colorama
 import datetime
 import numpy as np
@@ -25,9 +26,9 @@ fonts_dir = 'raw_fonts'
 target_img_dir = 'target_img'
 fake_img_dir = 'fake_img'
 predict_img_dir = 'predict_img'
-model_data_dir = 'model_data/pretraining.h5'
+model_data_dir = 'model_data/gan_model.h5'
 
- 
+
 # Define hyperparameters
 epochs_for_gan = 150
 batch_size = 32
@@ -106,8 +107,9 @@ def build_generator():
     def conv2d(layer_input, filters, f_size=4, bn=True):
         d = Conv2D(filters, kernel_size=f_size,
                    strides=2, padding='same',
-                   kernel_initializer=RandomNormal(mean=0.0, stddev=0.05, seed=None),
-                   kernel_regularizer = l2(l2_rate))(layer_input)
+                   kernel_initializer=RandomNormal(
+                       mean=0.0, stddev=0.05, seed=None),
+                   kernel_regularizer=l2(l2_rate))(layer_input)
         d = PReLU()(d)
         if bn:
             d = BatchNormalization()(d)
@@ -199,7 +201,8 @@ gan.compile(loss=['mse', 'mae'],
             loss_weights=[1, 100],
             optimizer=Adam(lr=learning_rate))
 
-print(colorama.Fore.GREEN + colorama.Style.BRIGHT + "Model compiled successfully.")
+print(colorama.Fore.GREEN + colorama.Style.BRIGHT +
+      "Model compiled successfully.")
 
 
 # Dynamically generate training data
@@ -245,14 +248,16 @@ def save_image(epoch):
                       127.5).astype('uint8').reshape(128, 128)
         Image.fromarray(save_image, mode='L').save(
             '{}/{}{}.png'.format(fake_img_dir, character, epoch + 1))
-    print(colorama.Fore.GREEN + colorama.Style.BRIGHT + 'Images saved successfully.')
+    print(colorama.Fore.GREEN + colorama.Style.BRIGHT +
+          'Images saved successfully.')
 
 
 # Save model
 def save_model():
     print('Saving model...')
     gan.save(model_data_dir)
-    print(colorama.Fore.GREEN + colorama.Style.BRIGHT + 'Model saved successfully.')
+    print(colorama.Fore.GREEN + colorama.Style.BRIGHT +
+          'Model saved successfully.')
 
 
 # Train GAN
@@ -274,7 +279,7 @@ def train():
     for epoch_i in range(epochs_for_gan):
         data = generate_training_data(
             font, characters, target_images, batch_size)
-        
+
         d_loss_total = .0
         g_loss_total = .0
 
@@ -293,7 +298,6 @@ def train():
             d_loss_total += gan_loss[1]
             g_loss_total += gan_loss[2]
 
-        
         # Print epoch & loss
         print("epoch %d/%d \t D loss: %f, G loss: %f \t time: %s" %
               (epoch_i+1, epochs_for_gan, d_loss_total/batch_size, g_loss_total/batch_size, datetime.datetime.now() - start_time))
@@ -308,3 +312,5 @@ def train():
 
 
 train()
+
+image_mosaick()

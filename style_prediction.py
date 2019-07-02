@@ -5,7 +5,7 @@ import pickle
 from PIL import Image
 import numpy
 from keras.models import load_model
-from custom_layers import GlobalStandardPooling2D
+from lib.custom_layers import GlobalStandardPooling2D
 
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'

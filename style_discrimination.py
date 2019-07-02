@@ -1,14 +1,12 @@
-# -*- coding: utf-8 -*-
-
+from PIL import Image, ImageDraw, ImageFont
+from keras.layers import Input, Dense, Dropout, Conv2D, MaxPooling2D, AveragePooling2D, GlobalAveragePooling2D, PReLU, BatchNormalization, concatenate
+from keras.models import Model, load_model
+from keras.utils import np_utils
+from lib.custom_layers import GlobalStandardPooling2D
+import numpy
 import os
 import pickle
-from PIL import Image, ImageDraw, ImageFont
 import random
-import numpy
-from keras.models import Model, load_model
-from keras.layers import Input, Dense, Dropout, Conv2D, MaxPooling2D, AveragePooling2D, GlobalAveragePooling2D, PReLU, BatchNormalization, concatenate
-from custom_layers import GlobalStandardPooling2D
-from keras.utils import np_utils
 
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
