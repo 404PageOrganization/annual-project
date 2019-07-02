@@ -1,7 +1,7 @@
-from keras.models import load_model
+from keras.models import load_model, Model
 from PIL import Image, ImageFont, ImageDraw
 import os
-import numpy
+import numpy as np
 
 
 # See https://stackoverflow.com/questions/42270739/how-do-i-resolve-these-tensorflow-warnings
@@ -10,12 +10,16 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 # Define abspaths
 fonts_dir = 'raw_fonts'
-fake_img_dir = 'predict_img'
-model_data_dir = 'model_data/generator.h5'
+generated_img_dir = 'generated_img'
+model_data_dir = 'model_data/gan_model.h5'
 
 
-# Read all characters
-characters = open('characters.txt', 'r',
+# Define Normal Scale
+norm_scale = 0.14
+
+
+# Read generate characters
+characters = open('test.txt', 'r',
                   encoding='utf-8').read().replace('\n', '')
 
 
@@ -50,13 +54,16 @@ for character in characters:
 
 
 # Process image
-raw_images = numpy.array(raw_images)
+raw_images = np.array(raw_images)
 raw_images = raw_images.reshape(
     raw_images.shape[0], 128, 128, 1).astype('float32') / 127.5 - 1
+raw_images += np.random.normal(
+    size=(raw_images.shape[0], 128, 128, 1), scale=norm_scale)
 
 
 # Load trained models
-generator = load_model(model_data_dir)
+gan = load_model(model_data_dir)
+generator = Model(inputs=gan.input, outputs=gan.layers[1].get_output_at(-1))
 
 
 # Print model struct
@@ -64,9 +71,10 @@ print(generator.summary())
 
 
 # Predict image
-fake_images = generator.predict(x=raw_images, verbose=1)
+generated_images = generator.predict(x=raw_images, verbose=1)
 
-for character, fake_image in zip(characters, fake_images):
-    save_image = ((fake_image + 1) * 127.5).astype('uint8').reshape(128, 128)
+for character, generated_image in zip(characters, generated_images):
+    save_image = ((generated_image + 1) *
+                  127.5).astype('uint8').reshape(128, 128)
     Image.fromarray(save_image, mode='L').save(
-        fake_img_dir + '/' + character + '.png')
+        '{}/{}.png'.format(generated_img_dir, character))

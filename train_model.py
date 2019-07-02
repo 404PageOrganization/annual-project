@@ -232,7 +232,8 @@ def generate_training_data(font, characters, target_images, batch_size):
             X = np.array(X)
             X = X.reshape(X.shape[0], 128, 128, 1).astype(
                 'float32') / 127.5 - 1
-            X += np.random.normal(size=(X.shape[0], 128, 128, 1), scale=norm_scale)
+            X += np.random.normal(size=(X.shape[0],
+                                        128, 128, 1), scale=norm_scale)
 
             yield (X, np.array(Y))
             X = []
