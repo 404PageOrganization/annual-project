@@ -21,12 +21,8 @@ model_data_dir = 'model_data/gan_model.h5'
 
 # Define Args
 characters_per_line = 20
+lines_per_page = 20
 norm_scale = 0.4
-
-
-# Read generate words
-words = open(words_dir, 'r',
-             encoding='utf-8').read()
 
 # One item in list is a file named '.DS_Store', not a font file, so ignore it
 font_list = [name for name in os.listdir(fonts_dir) if name[0] != '.']
@@ -46,18 +42,18 @@ generator = Model(inputs=gan.input, outputs=gan.layers[1].get_output_at(-1))
 print(colorama.Fore.GREEN + colorama.Style.BRIGHT + 'Model loaded successfully.')
 
 
+# Read generate words
+sentences = open(words_dir, 'r',
+                 encoding='utf-8').read().split('\n')
+
+
 # Make output
-sentences = words.split('\n')
+page = 0
 lines = 0
 y_pos = 0
 
-for sentence in sentences:
-    if sentence != '':
-        lines += (len(sentence) - 1) // characters_per_line
-    lines += 1
-
 result = Image.new(mode='L', size=(
-    128 * characters_per_line, 128 * lines), color=255)
+    128 * characters_per_line, 128 * lines_per_page), color=255)
 
 
 for sentence in sentences:
@@ -102,12 +98,21 @@ for sentence in sentences:
             x_pos = 0
             y_pos += 1
 
+        if y_pos == lines_per_page:
+            # Save page and reset y pos
+            result.save('{}/output{}.png'.format(output_img_dir, page), 'PNG')
+            y_pos = 0
+            page += 1
+            # Create a new page
+            result = Image.new(mode='L', size=(
+                128 * characters_per_line, 128 * lines_per_page), color=255)
+
         result.paste(generated_image, (128 * x_pos, 128 * y_pos))
 
         x_pos += 1
 
     y_pos += 1
 
-
-result.save('{}/output.png'.format(output_img_dir), 'PNG')
+# Save final page
+result.save('{}/output{}.png'.format(output_img_dir, page), 'PNG')
 print(colorama.Fore.GREEN + colorama.Style.BRIGHT + 'Output successfully.')
