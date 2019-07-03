@@ -1,5 +1,6 @@
 from PIL import Image, ImageFont, ImageDraw
 from keras.models import load_model, Model
+from random import uniform
 import colorama
 import numpy as np
 import os
@@ -22,7 +23,8 @@ model_data_dir = 'model_data/gan_model.h5'
 # Define Args
 characters_per_line = 20
 lines_per_page = 20
-norm_scale = 0.4
+transform_div = 0.07
+norm_scale = 0.14
 
 # One item in list is a file named '.DS_Store', not a font file, so ignore it
 font_list = [name for name in os.listdir(fonts_dir) if name[0] != '.']
@@ -76,7 +78,13 @@ for sentence in sentences:
         draw.text((64 - text_w / 2, 64 - text_h / 2),
                   character, font=font, fill=0)
 
-        raw_images.append(list(img.getdata()))
+        data = [uniform(1-transform_div, 1+transform_div), uniform(-transform_div, transform_div), uniform(-transform_div, transform_div),
+                uniform(-transform_div, transform_div), uniform(1-transform_div, 1+transform_div), uniform(-transform_div, transform_div)]
+        
+        img_trans = img.transform(
+            (128, 128), Image.AFFINE, data, fillcolor=255)
+
+        raw_images.append(list(img_trans.getdata()))
 
     # Process image
     raw_images = np.array(raw_images)
