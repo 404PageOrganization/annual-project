@@ -4,6 +4,7 @@ from random import uniform
 import colorama
 import numpy as np
 import os
+import sys
 
 
 # See https://stackoverflow.com/questions/42270739/how-do-i-resolve-these-tensorflow-warnings
@@ -20,11 +21,32 @@ words_dir = 'test.txt'
 model_data_dir = 'model_data/gan_model.h5'
 
 
-# Define Args
-characters_per_line = 20
-lines_per_page = 20
-transform_div = 0.07
-norm_scale = 0.14
+# Define default Args
+args = {
+    'characters_per_line': 20,
+    'lines_per_page': 20,
+    'transform_div': 0.07,
+    'norm_scale': 0.14
+}
+
+
+# Read Argv
+argv = sys.argv[1:]
+if argv[0] in ('-h', '--help'):
+    print('Available args: %s' % ', '.join(args.keys()))
+    exit()
+
+for k, v in zip(argv[0::2], argv[1::2]):
+    if k[:2] == '--':
+        if k[2:] in args:
+            args[k[2:]] = eval(v)
+        else:
+            raise Exception(colorama.Fore.RED +
+                            colorama.Style.BRIGHT + 'Arg name %s not find!' % k)
+    else:
+        raise Exception(colorama.Fore.RED +
+                        colorama.Style.BRIGHT + '%s is not a vaild key!' % k)
+
 
 # One item in list is a file named '.DS_Store', not a font file, so ignore it
 font_list = [name for name in os.listdir(fonts_dir) if name[0] != '.']
@@ -55,7 +77,7 @@ lines = 0
 y_pos = 0
 
 result = Image.new(mode='L', size=(
-    128 * characters_per_line, 128 * lines_per_page), color=255)
+    128 * args['characters_per_line'], 128 * args['lines_per_page']), color=255)
 
 
 for sentence in sentences:
@@ -78,9 +100,9 @@ for sentence in sentences:
         draw.text((64 - text_w / 2, 64 - text_h / 2),
                   character, font=font, fill=0)
 
-        data = [uniform(1-transform_div, 1+transform_div), uniform(-transform_div, transform_div), uniform(-transform_div, transform_div),
-                uniform(-transform_div, transform_div), uniform(1-transform_div, 1+transform_div), uniform(-transform_div, transform_div)]
-        
+        data = [uniform(1-args['transform_div'], 1+args['transform_div']), uniform(-args['transform_div'], args['transform_div']), uniform(-args['transform_div'], args['transform_div']),
+                uniform(-args['transform_div'], args['transform_div']), uniform(1-args['transform_div'], 1+args['transform_div']), uniform(-args['transform_div'], args['transform_div'])]
+
         img_trans = img.transform(
             (128, 128), Image.AFFINE, data, fillcolor=255)
 
@@ -91,7 +113,7 @@ for sentence in sentences:
     raw_images = raw_images.reshape(
         raw_images.shape[0], 128, 128, 1).astype('float32') / 127.5 - 1
     raw_images += np.random.normal(
-        size=(raw_images.shape[0], 128, 128, 1), scale=norm_scale)
+        size=(raw_images.shape[0], 128, 128, 1), scale=args['norm_scale'])
 
     # Predict image
     generated_images = generator.predict(x=raw_images, verbose=0)
@@ -102,18 +124,18 @@ for sentence in sentences:
                            127.5).astype('uint8').reshape(128, 128)
         generated_image = Image.fromarray(generated_image).convert('L')
 
-        if x_pos == characters_per_line:
+        if x_pos == args['characters_per_line']:
             x_pos = 0
             y_pos += 1
 
-        if y_pos == lines_per_page:
+        if y_pos == args['lines_per_page']:
             # Save page and reset y pos
             result.save('{}/output{}.png'.format(output_img_dir, page), 'PNG')
             y_pos = 0
             page += 1
             # Create a new page
             result = Image.new(mode='L', size=(
-                128 * characters_per_line, 128 * lines_per_page), color=255)
+                128 * args['characters_per_line'], 128 * args['lines_per_page']), color=255)
 
         result.paste(generated_image, (128 * x_pos, 128 * y_pos))
 
