@@ -37,15 +37,12 @@ if argv[0] in ('-h', '--help'):
     exit()
 
 for k, v in zip(argv[0::2], argv[1::2]):
-    if k[:2] == '--':
-        if k[2:] in args:
-            args[k[2:]] = eval(v)
-        else:
-            raise Exception(colorama.Fore.RED +
-                            colorama.Style.BRIGHT + 'Arg name %s not find!' % k)
-    else:
-        raise Exception(colorama.Fore.RED +
-                        colorama.Style.BRIGHT + '%s is not a vaild key!' % k)
+    assert k[:2] == '--', colorama.Fore.RED + \
+        colorama.Style.BRIGHT + 'Argument %s is not start with --!' % k
+    assert k[2:] in args, colorama.Fore.RED + \
+        colorama.Style.BRIGHT + 'Arg name %s not find!' % k[2:]
+
+    args[k[2:]] = eval(v)
 
 
 # One item in list is a file named '.DS_Store', not a font file, so ignore it
