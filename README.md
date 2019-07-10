@@ -22,15 +22,15 @@ pip install -r requirements.txt
 -   model_data 存储风格识别网络模型
 -   output_img 保存生成的图片结果
 -   raw_fonts 存储训练所用的源字体文件
--   target_fonts 存储目标字体
+-   target_fonts 存储目标字体（注：此目录仅在测试阶段使用）
 -   target_img 存储目标字体图像
 -   target_img_origin 存储未切分的目标字体图像
 
 #### 项目各流程文件
 
-##### 预处理
+##### 预处理环节
 
--   [test]target_font_to_png.py 调用 target_fonts 文件夹下的第一个字体，在 target_img 子目录下生成所需要的目标字体图像（注：此脚本在测试阶段使用）
+-   [test]target_font_to_png.py 调用 target_fonts 文件夹下的第一个字体，在 target_img 子目录下生成所需要的目标字体图像（注：此脚本仅在测试阶段使用）
 -   fonts_sifting.py 筛选字符完整的字体
 -   image_preprocessing.py 进行字体图像的切分（注：此脚本在应用阶段使用）
 -   make_dirs.py 创建项目所需要的子目录
@@ -41,7 +41,7 @@ pip install -r requirements.txt
 -   characters.txt 存放最常用的 3500 个汉字
 -   train_model.py 训练网络
 
-##### 生成
+##### 生成环节
 
 -   generate_words.py 生成文章图像
 -   test.txt 存放需要生成的文章

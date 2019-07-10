@@ -318,6 +318,7 @@ def train():
 
 train()
 print(colorama.Fore.GREEN + colorama.Style.BRIGHT + 'Train finished.')
+
 image_mosaick()
 print(colorama.Fore.GREEN + colorama.Style.BRIGHT +
-      'Successfully output mosaic image .')
+      'Successfully output mosaic image.')
