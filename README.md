@@ -6,13 +6,25 @@
 
 本项目仅在 python 3.6.8 版本下测试通过
 
-使用 requirements 快速安装环境：
+安装项目所需的环境：
 
 ```bash
-pip install -r requirements.txt
+pip install pillow colorama
 ```
 
-如果你的电脑有较新的 NVIDIA 显卡，可以安装 CUDA 与 CUDNN 来使用 GPU 加速。
+如果你使用 CPU 进行训练（不推荐），可以安装 CPU 版本的 pytorch：
+
+```bash
+pip3 install https://download.pytorch.org/whl/cpu/torch-1.1.0-cp36-cp36m-win_amd64.whl
+pip3 install https://download.pytorch.org/whl/cpu/torchvision-0.3.0-cp36-cp36m-win_amd64.whl
+```
+
+如果你的电脑有较新的 NVIDIA 显卡，可以安装 CUDA9.0 与 CUDNN 来使用 GPU 加速，并且安装以下版本的 pytorch：
+
+```bash
+pip3 install https://download.pytorch.org/whl/cu90/torch-1.1.0-cp36-cp36m-win_amd64.whl
+pip3 install https://download.pytorch.org/whl/cu90/torchvision-0.3.0-cp36-cp36m-win_amd64.whl
+```
 
 #### 目录结构
 
