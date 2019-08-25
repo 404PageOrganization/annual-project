@@ -33,7 +33,9 @@ gf = 64                  # number of G's conv filters
 norm_scale = 0.07
 
 
-# ---------- LOAD DATA ---------- #
+# -----------
+#  LOAD DATA
+# -----------
 
 
 # Read target images & characters
@@ -99,18 +101,19 @@ for character, target_image, raw_image in zip(batch_characters, batch_target_ima
         '{}/{}raw_img.png'.format(fake_img_dir, character))
 
 
-# ---------- DEFINE MODEL ---------- #
+# --------------
+#  DEFINE MODEL
+# --------------
 
 
 # TODO: Realise SAME PADDING, which is not out-of-the-box in PyTorch
-
 def get_padding(in_size, out_size, kernel_size, stride=1, dilation=1):
-    padding = ((out_size - 1) * stride + 1 - in_size + dilation * (kernel_size - 1)) //2
+    padding = ((out_size - 1) * stride + 1 - in_size +
+               dilation * (kernel_size - 1)) // 2
     return padding
 
 
 # Define U-Net generator
-
 class down(nn.Module):
     def __init__(self, in_channels, out_channels, is_in=False):
         super().__init__()
@@ -131,6 +134,7 @@ class down(nn.Module):
     def forward(self, x):
         x = self.down(x)
         return x
+
 
 class up(nn.Module):
     def __init__(self, in_channels, out_channels, is_out=False):
@@ -156,6 +160,7 @@ class up(nn.Module):
             return x1
         x = torch.cat((x1, x2), dim=1)
         return x
+
 
 class Generator(nn.Module):
     def __init__(self, in_channels, out_channels):
@@ -245,8 +250,8 @@ def build_generator():
     return Model(d0, output_img)
 '''
 
-# Define PatchGAN discriminator
 
+# Define PatchGAN discriminator
 class d_layer(nn.Module):
     def __init__(self, in_channels, out_channels, is_in=False):
         super().__init__()
@@ -270,6 +275,7 @@ class d_layer(nn.Module):
         x = self.d_layer(x)
         return x
 
+
 class Discriminator(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
@@ -286,6 +292,7 @@ class Discriminator(nn.Module):
         x = self.d4(x)
         x = self.d5(x)
         return x
+
 
 '''
 def build_discriminator():
@@ -316,8 +323,8 @@ def build_discriminator():
     return Model([img_A, img_B], validity)
 '''
 
-# Complie GAN model
 
+# Complie GAN model
 mse_loss = nn.MSELoss()
 mae_loss = nn.L1Loss()
 generator = Generator(1, 1)
@@ -333,28 +340,6 @@ optimizer_G = torch.optim.Adam(generator.parameters(), lr=learning_rate)
 optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=learning_rate)
 
 Tensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
-
-'''
-discriminator = build_discriminator()
-discriminator.compile(loss='mse',
-                           optimizer=Adam(lr=learning_rate),
-                           metrics=['acc'])
-discriminator.trainable = False
-generator = build_generator()
-
-img_A = Input(shape=(128, 128, 1))
-img_B = Input(shape=(128, 128, 1))
-fake_A = generator(img_B)
-validity = discriminator([fake_A, img_B])
-
-gan = Model(inputs=[img_A, img_B], outputs=[validity, fake_A])
-gan.compile(loss=['mse', 'mae'],
-            loss_weights=[1, 100],
-            optimizer=Adam(lr=learning_rate))
-
-print(colorama.Fore.GREEN + colorama.Style.BRIGHT +
-      'Model compiled successfully.')
-'''
 
 
 # Dynamically generate training data
@@ -397,7 +382,7 @@ def generate_training_data(font, characters, target_images, batch_size):
 # Save sample images
 def save_image(epoch):
     print('Saving fake images...')
-    fake_images = generator.predict(x=batch_raw_images, verbose=1)
+    fake_images = generator(batch_raw_images)
     for character, fake_image in zip(batch_characters, fake_images):
         save_image = ((fake_image + 1) *
                       127.5).astype('uint8').reshape(128, 128)
@@ -417,20 +402,18 @@ def save_model():
 
 # Train GAN
 def train():
-    print('Training on %d samples, %d epochs with batch size %d...' %
-          (len(characters), epochs_for_gan, batch_size))
+    # Print information
+    print('Training on {} samples, {} epochs with batch size {}...'.format(
+        len(characters), epochs_for_gan, batch_size))
 
     # Set start time
     start_time = datetime.datetime.now()
 
-    # Output size of D, here 8 == 128 / 2 ** 4
-    gan_patch = (8, 8, 1)
-
     # Define ground truth for D
+    # Output size of D is 8 == 128 / 2 ** 4
+    gan_patch = (8, 8, 1)
     target_truth = Tensor((batch_size,) + gan_patch).fill_(1.0)
     fake_truth = Tensor((batch_size,) + gan_patch).fill_(0.0)
-    # target_truth = np.ones((batch_size,) + gan_patch)
-    # fake_truth = np.zeros((batch_size,) + gan_patch)
 
     # Tarin D first and G next for each epoch
     for epoch_i in range(epochs_for_gan):
@@ -443,7 +426,8 @@ def train():
         for (raw_image, target_image) in data:
             # Train D
             fake_image = generator(raw_image)
-            d_loss = mse_loss([target_image, raw_image], target_truth) + mse_loss([fake_image, raw_image], fake_truth)
+            d_loss = mse_loss([target_image, raw_image], target_truth) + \
+                mse_loss([fake_image, raw_image], fake_truth)
             d_loss.backward()
             optimizer_D.step()
             d_loss_total += d_loss
@@ -454,28 +438,13 @@ def train():
             optimizer_G.step()
             g_loss_total += g_loss
 
-            '''
-            # Train D
-            fake_image = generator.predict(raw_image)
-            discriminator.train_on_batch(
-                [target_image, raw_image], target_truth)
-            discriminator.train_on_batch(
-                [fake_image, raw_image], fake_truth)
-
-            # Train G (now D.trainable == false)
-            gan_loss = gan.train_on_batch(
-                [target_image, raw_image], [target_truth, target_image])
-
-            d_loss_total += gan_loss[1]
-            g_loss_total += gan_loss[2]
-            '''
-
+        # Calculate duration & reset start time
         duration = datetime.datetime.now() - start_time
         start_time = datetime.datetime.now()
 
         # Print epoch & loss
-        print('epoch %d/%d \t D loss: %f, G loss: %f \t time: %ds, ETA: %s' %
-              (epoch_i+1, epochs_for_gan, d_loss_total/batch_size, g_loss_total/batch_size, duration.seconds, (epochs_for_gan-epoch_i-1)*duration))
+        print('epoch {}/{}\tD loss: {}, G loss: {}\ttime: {}s, ETA: {}'.format(epoch_i+1, epochs_for_gan,
+                                                                               d_loss_total/batch_size, g_loss_total/batch_size, duration.seconds, (epochs_for_gan-epoch_i-1)*duration))
 
         # Save image & model
         if (epoch_i + 1) % save_image_rate == 0:
@@ -484,9 +453,11 @@ def train():
             save_model()
 
 
-train()
-print(colorama.Fore.GREEN + colorama.Style.BRIGHT + 'Training completed.')
-
-image_mosaick()
-print(colorama.Fore.GREEN + colorama.Style.BRIGHT +
-      'Successfully output mosaicked image.')
+if __name__ == '__main__':
+    # Train model
+    train()
+    print(colorama.Fore.GREEN + colorama.Style.BRIGHT + 'Training completed.')
+    # Mosaick images
+    image_mosaick()
+    print(colorama.Fore.GREEN + colorama.Style.BRIGHT +
+        'Successfully output mosaicked image.')
