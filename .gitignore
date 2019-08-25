@@ -1,6 +1,7 @@
 **/.DS_Store
 **/.ipynb_checkpoints
 **/__pycache__
+/.vscode
 /fake_img
 /fake_img_mosaicking
 /fonts_reserve
