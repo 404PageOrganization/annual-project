@@ -8,6 +8,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+import torchsnooper
 
 
 colorama.init(autoreset=True)
@@ -83,10 +84,10 @@ for character in batch_characters:
 # Process image
 batch_raw_images = np.array(batch_raw_images)
 batch_raw_images = batch_raw_images.reshape(
-    batch_raw_images.shape[0], 128, 128, 1).astype('float32') / 127.5 - 1
+    batch_raw_images.shape[0], 1, 128, 128).astype('float32') / 127.5 - 1
 target_images = np.array(target_images)
 target_images = target_images.reshape(
-    target_images.shape[0], 128, 128, 1).astype('float32') / 127.5 - 1
+    target_images.shape[0], 1, 128, 128).astype('float32') / 127.5 - 1
 
 batch_target_images = target_images[:20]
 
@@ -99,7 +100,6 @@ for character, target_image, raw_image in zip(batch_characters, batch_target_ima
         '{}/{}target_img.png'.format(fake_img_dir, character))
     Image.fromarray(raw_sample, mode='L').save(
         '{}/{}raw_img.png'.format(fake_img_dir, character))
-
 
 # --------------
 #  DEFINE MODEL
@@ -366,12 +366,15 @@ def generate_training_data(font, characters, target_images, batch_size):
         if ans == batch_size:
             ans = 0
             X = np.array(X)
-            X = X.reshape(X.shape[0], 128, 128, 1).astype(
+            X = X.reshape(X.shape[0], 1, 128, 128).astype(
                 'float32') / 127.5 - 1
+            '''
             X += np.random.normal(size=(X.shape[0],
                                         128, 128, 1), scale=norm_scale)
+            '''
+            Y = np.array(Y)
 
-            yield (X, np.array(Y))
+            yield(X, Y)
             X = []
             Y = []
             it += 1
@@ -381,6 +384,8 @@ def generate_training_data(font, characters, target_images, batch_size):
 
 # Save sample images
 def save_image(epoch):
+    pass
+    '''
     print('Saving fake images...')
     fake_images = generator(batch_raw_images)
     for character, fake_image in zip(batch_characters, fake_images):
@@ -390,6 +395,7 @@ def save_image(epoch):
             '{}/{}{}.png'.format(fake_img_dir, character, epoch + 1))
     print(colorama.Fore.GREEN + colorama.Style.BRIGHT +
           'Images saved successfully.')
+    '''
 
 
 # Save model
@@ -401,6 +407,7 @@ def save_model():
 
 
 # Train GAN
+# @torchsnooper.snoop()
 def train():
     # Print information
     print('Training on {} samples, {} epochs with batch size {}...'.format(
@@ -411,7 +418,7 @@ def train():
 
     # Define ground truth for D
     # Output size of D is 8 == 128 / 2 ** 4
-    gan_patch = (8, 8, 1)
+    gan_patch = (1, 8, 8)
     target_truth = Tensor((batch_size,) + gan_patch).fill_(1.0)
     fake_truth = Tensor((batch_size,) + gan_patch).fill_(0.0)
 
@@ -424,6 +431,12 @@ def train():
         g_loss_total = 0.
 
         for (raw_image, target_image) in data:
+            # print(type(raw_image))
+            # print(type(target_image))
+            raw_image = torch.from_numpy(raw_image)
+            target_image = torch.from_numpy(target_image)
+            raw_image = raw_image.cuda()
+            target_image = target_image.cuda()
             # Train D
             fake_image = generator(raw_image)
             d_loss = mse_loss([target_image, raw_image], target_truth) + \
