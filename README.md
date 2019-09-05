@@ -49,7 +49,7 @@ python3 make_dirs.py
 > 注：此步骤仅在测试阶段使用，应用阶段将变为读取用户手写字体。
 
 ```bash
-python3 [test]target_font_to_png.py
+python3 _test_target_font_to_png.py
 ```
 
 4. 训练模型
@@ -75,7 +75,7 @@ python3 train_model.py
 
 ### 预处理环节
 
--   [test]target_font_to_png.py 调用 target_fonts 文件夹下的第一个字体，在 target_img 子目录下生成所需要的目标字体图像（注：此脚本仅在测试阶段使用）
+-   _test_target_font_to_png.py 调用 target_fonts 文件夹下的第一个字体，在 target_img 子目录下生成所需要的目标字体图像（注：此脚本仅在测试阶段使用）
 -   fonts_sifting.py 筛选字符完整的字体
 -   image_preprocessing.py 进行字体图像的切分（注：此脚本在应用阶段使用）
 -   make_dirs.py 创建项目所需要的子目录
